@@ -8,7 +8,7 @@ $GLOBALS['config']['timezone'] = "America/New_York";
 $GLOBALS['config']['devmode'] = 1; //This enables dev mode to print out dev inforamtion -- DO NOT USE IN PRODUCTION!
 
 //If the site is not in a root folder, how many values in the url_loc array will we be ignoring so we think we're in a root folder?
-$GLOBALS['config']['url_offset'] = 1;
+$GLOBALS['config']['url_offset'] = 2;
 
 //dbconf includes database details i can't pass to github, config stores all global data and soon will do more... we will decouple
 //this ultimately!
