@@ -1,14 +1,14 @@
 <?php
 
 //Global config variables
-$GLOBALS['config']['url'] = "https://www.nightoff.org/tempapi/v2";
-$GLOBALS['config']['avatar_url'] = "https://api.postogon.com/assets/img/profile_pictures";
-$GLOBALS['config']['private_folder'] = "/usr/www/igfastdl/postogon/tempapi/private";
+$GLOBALS['config']['url'] = "https://postogon.com";
+$GLOBALS['config']['avatar_url'] = "https://cdn.postogon.com/assets/img/profile_pictures";
+$GLOBALS['config']['private_folder'] = "/usr/www/igfastdl/postogon-api/private";
 $GLOBALS['config']['timezone'] = "America/New_York";
 $GLOBALS['config']['devmode'] = 1; //This enables dev mode to print out dev inforamtion -- DO NOT USE IN PRODUCTION!
 
 //If the site is not in a root folder, how many values in the url_loc array will we be ignoring so we think we're in a root folder?
-$GLOBALS['config']['url_offset'] = 2;
+$GLOBALS['config']['url_offset'] = 0;
 
 //dbconf includes database details i can't pass to github, config stores all global data and soon will do more... we will decouple
 //this ultimately!
