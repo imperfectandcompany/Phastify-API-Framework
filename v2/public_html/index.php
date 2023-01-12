@@ -1,5 +1,6 @@
 <?php
 include("../../private/config.php");
+date_default_timezone_set($GLOBALS['config']['timezone']);
 if(!ob_start("ob_gzhandler")) ob_start();
 session_start();
 

@@ -41,6 +41,26 @@ class DatabaseConnector {
         return $data;
         }
     }
+    
+    public function viewData($table, $select = '*', $query = null, $filter_params = null)
+    {
+        try {
+            $stmt = $this->dbConnection->prepare("SELECT $select FROM $table $query");
+            if($filter_params){
+                foreach($filter_params as $key => $data){
+                    $key++;
+                    $stmt->bindParam($key, $data['value'], $data['type']);
+                }
+            }
+
+            $stmt->execute();
+            return array("count" => $stmt->rowCount(), "results" => $stmt->fetchAll());
+        } catch (\PDOException $e) {
+            $GLOBALS['errors'][] = $e->getMessage();
+            return false;
+        }
+    }
+
 
     
 

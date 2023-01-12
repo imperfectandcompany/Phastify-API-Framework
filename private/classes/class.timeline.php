@@ -13,7 +13,10 @@ class timeline {
      * @return void
      */
     public function fetchPublicTimeline(){
-        return "Yo we made it";
+        $query = 'LIMIT '.$GLOBALS['config']['max_timeline_lookup'];
+        $filter_params = array();
+
+        return $this->dbObject->viewData($GLOBALS['db_conf']['db_db'].".posts", '*', $query, $filter_params);
     }
 
     

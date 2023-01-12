@@ -24,6 +24,7 @@ $GLOBALS['db_conf']['db_charset']  = 'utf8mb4';
 //General settings
 $GLOBALS['config']['max_username_length'] = '32';
 $GLOBALS['config']['max_password_length'] = '32';
+$GLOBALS['config']['max_timeline_lookup'] = '30';
 $GLOBALS['config']['default_avatar'] = 'default.png';
 
 //Group settings
@@ -55,5 +56,9 @@ if($GLOBALS['config']['url_offset'] > 0){
 
 //Do not touch -- These are settings we should define or set, but not adjust unless we absolutely need to.
 $GLOBALS['errors'] = array();
+$GLOBALS['messages'] = array(); //Main array for all status messages
+$GLOBALS['messages']['error'] = array(); //Main array for all status messages
+$GLOBALS['messages']['warning'] = array(); //Main array for all status messages
+$GLOBALS['messages']['success'] = array(); //Main array for all status messages
 
 ?>
