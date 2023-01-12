@@ -2,7 +2,27 @@
 
     <h1>This is our TL object</h1>
 
-    <?php foreach($timeline->fetchPublicTimeline()['results'] as $key => $value): ?>
+
+<?php
+if(isset($endpointResponse)):
+?>
+
+<?php
+$result = array();
+foreach ($endpointResponse as $row) {
+    $temp = array(
+        "PostId" => $row["id"],
+        "PostBody" => $row["body"],
+        "PostedBy" => $row["user_id"],
+        "Likes" => $row["likes"]
+    );
+    array_push($result, $temp);
+}
+
+return json_response($result);
+
+?>
+    <?php foreach($endpointResponse as $key => $value): ?>
 
         <div class="post">
 {
@@ -11,5 +31,6 @@ Post: <?php echo nl2br(htmlspecialchars($value['body'], ENT_QUOTES)); ?>
 }
 
     <?php endforeach; ?>
+<?php endif ?>
 
   </div>
