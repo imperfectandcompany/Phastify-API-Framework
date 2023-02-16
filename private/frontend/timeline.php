@@ -1,12 +1,12 @@
+<?php
+if($GLOBALS['config']['devmode'] == 1):?>
 <div class="container mx-auto">
 
-    <h1>This is our TL object</h1>
-
-
+    <h1>[DEV] This is our TL object</h1>
+<?php endif ?>
 <?php
 if(isset($endpointResponse)):
 ?>
-
 <?php
 $result = array();
 foreach ($endpointResponse as $row) {
@@ -32,5 +32,7 @@ Post: <?php echo nl2br(htmlspecialchars($value['body'], ENT_QUOTES)); ?>
 
     <?php endforeach; ?>
 <?php endif ?>
-
-  </div>
+<?php
+if($GLOBALS['config']['devmode'] == 1):?>
+    </div>
+<?php endif ?>
