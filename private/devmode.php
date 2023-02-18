@@ -11,8 +11,7 @@
 <?php print_r($GLOBALS['url_loc']); ?>
 
 <h4>token</h4>
-<?php print_r($GLOBALS['token']);?>
+<?php print_r($token);?>
 
 <h4>user_id</h4>
 <?php echo $GLOBALS['user_id'];?>
-<hr/>

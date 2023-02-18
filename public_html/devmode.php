@@ -15,4 +15,3 @@
 
 <h4>user_id</h4>
 <?php echo $GLOBALS['user_id'];?>
-<hr/>
