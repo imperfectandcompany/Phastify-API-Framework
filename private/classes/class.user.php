@@ -37,5 +37,24 @@ class User {
         }
     }
     
+    public function createUser($email, $password) {
+        $result = $this->dbObject->query('INSERT INTO users (email, password, verified) VALUES (:email, :password, :verified)', array(
+            ':email' => $email,
+            ':password' => password_hash($password, PASSWORD_BCRYPT),
+            ':verified' => 0
+        ));
+        return $result !== false;
+    }
+
+    public function getUserByEmail($email) {
+        $result = $this->dbObject->query('SELECT id from users WHERE email=:email', array(
+            ':email' => strtolower($email)
+        ));
+        if ($result && count($result) > 0) {
+            return $result[0]['id'];
+        } else {
+            return false;
+        }
+    }
     
 }

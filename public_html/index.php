@@ -46,6 +46,17 @@ $result = authenticate_user($token, $dbConnection);
 
 // check the authentication result
 if ($result['status'] === 'error') {
+    if($GLOBALS['url_loc'][1] == "register"){
+        if($GLOBALS['config']['devmode'] == 1 && $_SERVER['REQUEST_METHOD']!== 'POST'){
+            include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');
+        }
+        // create a new instance of the Router class and dispatch the incoming request
+        $notAuthenticatedRouter = new Router();
+        $notAuthenticatedRouter->add('/register', 'UserController@register', 'POST');
+        //dispatch router since authentication and global variables are set!
+        $notAuthenticatedRouter->dispatch($GLOBALS['url_loc'], $dbConnection);
+        exit;
+    }
     http_response_code(ERROR_UNAUTHORIZED);
     echo $result['message'];
     exit;
