@@ -44,23 +44,34 @@ if (empty($token)) {
 // authenticate the user
 $result = authenticate_user($token, $dbConnection);
 
-// check the authentication result
+// handle case where user is not authenticated
 if ($result['status'] === 'error') {
-    if($GLOBALS['url_loc'][1] == "register"){
-        if($GLOBALS['config']['devmode'] == 1 && $_SERVER['REQUEST_METHOD']!== 'POST'){
-            include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');
-        }
-        // create a new instance of the Router class and dispatch the incoming request
-        $notAuthenticatedRouter = new Router();
-        $notAuthenticatedRouter->add('/register', 'UserController@register', 'POST');
-        //dispatch router since authentication and global variables are set!
-        $notAuthenticatedRouter->dispatch($GLOBALS['url_loc'], $dbConnection);
-        exit;
+    
+    // create a new instance for unauthenticated routes from router class
+    $notAuthenticatedRouter = new Router();
+    
+    // add the non-authenticated routes to the router
+    $notAuthenticatedRouter->add('/register', 'UserController@register', 'POST');
+    $notAuthenticatedRouter->add('/auth', 'UserController@authenticate', 'POST');
+
+    // get all the routes that have been added to the router
+    $routes = $notAuthenticatedRouter->getRoutes();
+    
+    //check if the requested route does not match one of the non-authenticated routes
+    if(!$notAuthenticatedRouter->routeExists($GLOBALS['url_loc'], $routes)){
+        http_response_code(ERROR_UNAUTHORIZED);
+        echo $result['message'];
+        exit();
     }
-    http_response_code(ERROR_UNAUTHORIZED);
-    echo $result['message'];
-    exit;
+    
+    if($GLOBALS['config']['devmode'] == 1){
+        include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');
+    }
+    // dispatch the request to the appropriate controller
+    $notAuthenticatedRouter->dispatch($GLOBALS['url_loc'], $dbConnection);
+    exit();
 }
+
 
 // set user ID and token in global variable
 $GLOBALS['user_id'] = $result['user_id'];
@@ -70,9 +81,8 @@ if($GLOBALS['config']['devmode'] == 1){
     include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');
 }
 
-// create a new instance of the Router class and dispatch the incoming request
+// if the user is authenticated, create a new instance of the Router class and dispatch the incoming request
 $router = new Router();
-
 $router->add('/timeline/publicTimeline', 'TimelineController@fetchPublicTimeline', 'GET');
 $router->add('/timeline/createPost', 'TimelineController@createPost', 'POST');
 
