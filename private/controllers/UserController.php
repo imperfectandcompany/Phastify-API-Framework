@@ -128,5 +128,41 @@ class UserController {
             exit;
         }
     }
+    
+    public function removeToken($uid, $token = null) {
+        if ($token) {
+            // Delete the specified token
+            $result = $this->dbObject->deleteData('login_tokens', 'WHERE user_id = ? AND token = ?', array(array('value' => $uid, 'type' => PDO::PARAM_INT), array('value' => sha1($token), 'type' => PDO::PARAM_STR)));
+        } else {
+            // Delete all tokens for the user
+            $result = $this->dbObject->deleteData('login_tokens', 'WHERE user_id = ?', array(array('value' => $uid, 'type' => PDO::PARAM_INT)));
+        }
+
+        return $result;
+    }
+    
+    public function logout() {
+        
+        // Return an error if the password is incorrect
+        echo json_encode(array('status' => 'testing', 'message' => 'cant logout'));
+        http_response_code(ERROR_UNAUTHORIZED);
+        exit;
+
+    }
+
+    public function logoutAll() {
+        echo json_encode(array('status' => 'testing', 'message' => 'cant logout all'));
+        http_response_code(ERROR_UNAUTHORIZED);
+        exit;
+    }
+    
+    public function logoutAllParam($deviceToken) {
+        echo json_encode(array('status' => 'testing', 'message' => 'cant logout all', 'token' => $deviceToken));
+        http_response_code(ERROR_UNAUTHORIZED);
+        exit;
+    }
+    
+    
+    
 }
  ?>
