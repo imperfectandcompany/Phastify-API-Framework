@@ -36,20 +36,24 @@ class User {
         }
     }
     
-    /**
-     * Queries the database for a user with the given email and returns their password (hashed and salted).
-     *
-     * @param string $email The email of the user to query
-     *
-     * @return string|false Returns the user's password if the query is successful, or false if the user cannot be found
-     */
     public function getPasswordFromEmail($email) {
-        $result = $this->dbObject->viewSingleData('users', 'password', 'WHERE email = :email', array(':email' => strtolower($email)));
-        if ($result && count($result) > 0) {
-            return $result['password'];
-        } else {
-            return false;
-        }
+        $table = 'users';
+        $select = 'password';
+        $whereClause = 'WHERE email = :email';
+        $filterParams = makeFilterParams($email);
+
+        $result = $this->dbObject->viewSingleData($table, $select, $whereClause, $filterParams)['result'];
+        return $result ? $result['password'] : null;
+    }
+    
+    public function getPasswordFromUsername($username) {
+        $table = 'users';
+        $select = 'password';
+        $whereClause = 'WHERE username = :username';
+        $filterParams = makeFilterParams($username);
+
+        $result = $this->dbObject->viewSingleData($table, $select, $whereClause, $filterParams)['result'];
+        return $result ? $result['password'] : null;
     }
 
     /**
@@ -60,29 +64,45 @@ class User {
      * @return int|false Returns the user's unique identifier if the query is successful, or false if the user cannot be found
      */
     public function getUidFromEmail($email) {
-        $result = $this->dbObject->viewSingleData('users', 'id', 'WHERE email = :email', array(':email' => strtolower($email)));
-        if ($result && count($result) > 0) {
-            return $result['id'];
-        } else {
-            return false;
-        }
-    }
+        $table = 'users';
+        $select = 'id';
+        $whereClause = 'WHERE email = :email';
+        $filterParams = makeFilterParams($email);
 
+        $result = $this->dbObject->viewSingleData($table, $select, $whereClause, $filterParams)['result'];
+        return $result ? $result['id'] : null;
+    }
+    
+
+    
+    
     /**
-     * Queries the database for a user with the given username and returns their password (hashed and salted).
+     * Get user by email address
      *
-     * @param string $username The username of the user to query
-     *
-     * @return string|false Returns the user's password if the query is successful, or false if the user cannot be found
+     * @param string $email User email
+     * @return array User Id
      */
-    public function getPasswordFromUsername($username) {
-        $result = $this->dbObject->viewSingleData('users', 'password', 'WHERE username = :username', array(':username' => strtolower($username)));
+    public function getUserByEmail($email) {
+        $result = $this->dbObject->query('SELECT id from users WHERE email=:email', array(
+            ':email' => strtolower($email)
+        ));
         if ($result && count($result) > 0) {
-            return $result['password'];
+            return $result[0]['id'];
         } else {
             return false;
         }
     }
+    
+    public function createUser($email, $password) {
+        $result = $this->dbObject->query('INSERT INTO users (email, password, verified) VALUES (:email, :password, :verified)', array(
+            ':email' => $email,
+            ':password' => password_hash($password, PASSWORD_BCRYPT),
+            ':verified' => 0
+        ));
+        return $result !== false;
+    }
+    
+
     
     /**
          * Queries the database for a user with the given username and returns their unique identifier.
@@ -102,24 +122,29 @@ class User {
         }
     
     /**
-     * Updates the database to set the token for the user with the given unique identifier.
+     * Sets the database to set the token for the user with the given unique identifier.
      *
      * @param int $uid The unique identifier of the user
-     * @param string $token The token to set
      *
-     * @return bool Returns true if the token was set successfully, false otherwise
+     * @return string|false Returns the newly generated token if it was set successfully, or false otherwise
      */
-    public function setToken($uid, $token) {
+    public function setToken($uid) {
+        // Generate a token
+        $cstrong = True;
+        $token = bin2hex(openssl_random_pseudo_bytes(64, $cstrong));
+
         // Hash the token for security
         $token_hash = sha1($token);
-        
-        // Prepare the SQL statement to update the token
-        $sql = "UPDATE login_tokens SET token = ? WHERE user_id = ?";
-        
-        // Execute the SQL statement with the user ID and hashed token as parameters
-        $result = $this->dbObject->query($sql, array($token_hash, $uid));
-        
-        // Check if the update was successful
-        return $result !== false;
+
+        // Prepare the SQL statement to insert a new record with the user ID and hashed token
+        $rows = 'user_id, token';
+        $values = '?, ?';
+        $paramValues = array($uid, $token_hash);
+        $filterParams = makeFilterParams($paramValues);
+        $result = $this->dbObject->insertData('login_tokens', $rows, $values, $filterParams);
+
+        // Check if the insert was successful and return the token if so
+        return $result !== false ? $token : false;
     }
+
 }

@@ -3,6 +3,7 @@ include '../private/config.php';
 // includes
 include($GLOBALS['config']['private_folder'].'/functions/functions.general.php');
 include($GLOBALS['config']['private_folder'].'/functions/functions.json.php');
+include($GLOBALS['config']['private_folder'].'/functions/functions.database.php');
 include($GLOBALS['config']['private_folder'].'/constants.php');
 
 // include the necessary files and create a database connection object

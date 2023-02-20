@@ -23,7 +23,7 @@ class timeline {
         $query = 'LIMIT '.$GLOBALS['config']['max_timeline_lookup'];
         $filter_params = array();
 
-        return $this->dbObject->viewData($GLOBALS['db_conf']['db_db'].".posts", '*', $query, $filter_params);
+        return $this->dbObject->viewData("posts", '*', $query, $filter_params);
     }
 
     

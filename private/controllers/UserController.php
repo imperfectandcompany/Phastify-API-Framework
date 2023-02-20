@@ -76,9 +76,6 @@ class UserController {
     }
     
     public function authenticate() {
-        // Set the response content type to JSON
-        header('Content-Type: application/json');
-        
         // Parse the request body
         $postBody = json_decode(file_get_contents("php://input"));
 
@@ -112,11 +109,14 @@ class UserController {
 
         // Check if the password is correct
         if (password_verify($password, $dbPassword)) {
-            // Generate a token
-            $cstrong = True;
-            $token = bin2hex(openssl_random_pseudo_bytes(64, $cstrong));
             // Save the token in the database
-            $user->setToken($uid, $token);
+            $token = $user->setToken($uid);
+            if(!$token){
+                // Return an error if the password is incorrect
+                echo json_encode(array('status' => 'error', 'message' => 'Token could not be saved'));
+                http_response_code(ERROR_UNAUTHORIZED);
+                exit;
+            }
             // Return the token to the client
             echo json_encode(array('status' => 'success', 'token' => $token));
             http_response_code(SUCCESS_OK);
