@@ -50,8 +50,20 @@ class Router {
             $existingSegments = explode('/', $existingUri);
             $newSegments = explode('/', $uri);
             
-            if ($existingSegments[1] == $newSegments[1] && count($existingSegments) == count($newSegments)) {
-                if (isset($existingRoute['methods'][$requestMethod])) {
+            if (count($existingSegments) === count($newSegments)) {
+                $same = true;
+                $params = array();
+                
+                for ($i = 0; $i < count($existingSegments); $i++) {
+                    if ($existingSegments[$i] !== $newSegments[$i] && substr($existingSegments[$i], 0, 1) !== ':') {
+                        $same = false;
+                        break;
+                    } elseif (substr($existingSegments[$i], 0, 1) === ':') {
+                        $params[] = substr($existingSegments[$i], 1);
+                    }
+                }
+                
+                if ($same && !empty($params)) {
                     throw new Exception("Route with URI '$uri' conflicts with existing route '$existingUri'.");
                 }
             }
@@ -117,39 +129,6 @@ class Router {
         }
     }
 
-    
-    public function getRoutes() {
-        return $this->routes;
-    }
-
-    public function routeExists($url, $route) {
-        $url = implode('/', $url);
-        return array_key_exists($url, $route);
-    }
-    
-    private function checkParams($controllerClass, $controllerMethod, $params) {
-        // Get the method signature of the controller method
-        $reflectionMethod = new ReflectionMethod($controllerClass, $controllerMethod);
-        $parameters = $reflectionMethod->getParameters();
-
-        // Check if the number of parameters match
-        if (count($params) !== count($parameters)) {
-            return false;
-        }
-
-        // Check if the types of the parameters match
-        foreach ($parameters as $index => $parameter) {
-            $expectedType = $parameter->getType();
-            $actualType = gettype($params[$index]);
-            if ($expectedType !== null && $actualType !== $expectedType->getName()) {
-                return false;
-            }
-        }
-
-        // All checks passed, params are valid
-        return true;
-    }
-
     public function dispatch($url, $dbConnection)
     {
         $url = implode('/', $url);
@@ -158,55 +137,103 @@ class Router {
         foreach ($this->routes as $route => $config) {
             // Replace parameter values in URL with parameter names
             $pattern = preg_replace('/:[^\/]+/', '([^\/]+)', $route);
-            
+
             // Check if URL matches route pattern
             if (preg_match('#^' . $pattern . '$#', $url, $matches)) {
                 // Extract parameter names and values
                 $routeParams = array_combine($config['params'], array_slice($matches, 1));
-                
+
                 // Replace parameter values in URL with parameter names
                 $routeUrl = str_replace(array_values($routeParams), array_keys($routeParams), $route);
-                                
+
                 // Check if request method is allowed for this route
                 if (!isset($config['methods'][$_SERVER['REQUEST_METHOD']])) {
-                    http_response_code(ERROR_NOT_FOUND);
-                    $GLOBALS['config']['devmode'] ? '404 - Not Found' : '404 - Not Found';
-                    return;
-                }
-                
-                // Extract controller and method from route
-                list($controller, $method) = explode('@', $config['methods'][$_SERVER['REQUEST_METHOD']]['controller']);
-                
-                // Include the controller class
-                require_once $GLOBALS['config']['private_folder'] . "/controllers/{$controller}.php";
-
-                // Check if controller class and method exist
-                if (!class_exists($controller) || !method_exists($controller, $method)) {
-                    echo (class_exists($controller)) ? "true":"false";
                     http_response_code(ERROR_NOT_FOUND);
                     echo $GLOBALS['config']['devmode'] ? '404 - Not Found' : '404 - Not Found';
                     return;
                 }
 
-                // Set content type as json if its not in dev mode
-                if(!$GLOBALS['config']['devmode']){header('Content-Type: application/json');}
+                // Extract controller and method from route
+                list($controller, $method) = explode('@', $config['methods'][$_SERVER['REQUEST_METHOD']]['controller']);
+
+                // Include the controller class
+                require_once $GLOBALS['config']['private_folder'] . "/controllers/{$controller}.php";
+
+                // Check if controller class and method exist
+                if (!class_exists($controller) || !method_exists($controller, $method)) {
+                    http_response_code(ERROR_NOT_FOUND);
+                    echo $GLOBALS['config']['devmode'] ? '404 - Not Found' : '404 - Not Found';
+                    return;
+                }
                 
-                // Create controller instance and call method
+                // Check if the number of route params matches the number of defined params
+                if (count($routeParams) != count($config['params'])) {
+                    http_response_code(ERROR_BAD_REQUEST);
+                    echo $GLOBALS['config']['devmode'] ? '400 - Bad Request: Invalid number of parameters ' : '400 - Bad Request';
+                    return false;
+                }
+                
+                // Check if the number of route params matches the number of defined params, accounting for optional params
+                $requiredParamsCount = count(array_filter($config['params'], function($param) {
+                    return substr($param, -1) !== '?';
+                }));
+                if (count($routeParams) < $requiredParamsCount || count($routeParams) > count($config['params'])) {
+                    http_response_code(ERROR_BAD_REQUEST);
+                    echo $GLOBALS['config']['devmode'] ? '400 - Bad Request: Invalid number of parameters ' : '400 - Bad Request';
+                    return false;
+                }
+
+                // Combine parameter names and values into associative array, ignoring optional parameters with no value
+                $params = array_intersect_key($routeParams, array_flip(array_filter($config['params'], function($param) use ($routeParams) {
+                    return substr($param, -1) !== '?' || array_key_exists(rtrim($param, '?'), $routeParams);
+                })));
+
+                // Combine parameter names and values into associative array
+                $params = array_combine($config['params'], array_values($routeParams));
+                
+                // Check if the parameters are valid
+                $methodParams = new ReflectionMethod($controller, $method);
+                $numParams = $methodParams->getNumberOfParameters();
+                if (count($params) != $numParams) {
+                    http_response_code(ERROR_BAD_REQUEST);
+                    echo $GLOBALS['config']['devmode'] ? '400 - Bad Request: Invalid number of parameters ' : '400 - Bad Request';
+                    return;
+                }
+
+                // Get the method's parameter types
+                $methodParamsTypes = $methodParams->getParameters();
+                $paramTypes = array();
+                foreach ($methodParamsTypes as $methodParamType) {
+                    $paramType = (string)$methodParamType->getType();
+                    if (!empty($paramType)) {
+                        $paramTypes[] = $paramType;
+                    }
+                }
+                
+                // Check if the types of the parameters match the method's parameter types
+                $validatedParams = array();
+                foreach ($params as $key => $param) {
+                    if (empty($paramTypes) || $paramTypes[$key] == 'string') {
+                        $validatedParams[] = (string)$param;
+                    } elseif ($paramTypes[$key] == 'int') {
+                        $validatedParams[] = (int)$param;
+                    } elseif ($paramTypes[$key] == 'float') {
+                        $validatedParams[] = (float)$param;
+                    } elseif ($paramTypes[$key] == 'bool') {
+                        $validatedParams[] = (bool)$param;
+                    }
+                }
+
+                $params = $validatedParams;
+                
+
+                // Call the controller method with the parameters
                 $controllerInstance = new $controller($dbConnection);
-                $controllerInstance->{$method}(...array_values($routeParams));
-                
-                return;
+                $controllerInstance->{$method}(...$params);
+                return true;
             }
         }
-
-        // No route matched the URL
-        http_response_code(ERROR_NOT_FOUND);
-        echo $GLOBALS['config']['devmode'] ? '404 - Not Found' : '404 - Not Found';
-        return;
     }
-
-    
-    
 
 }
 

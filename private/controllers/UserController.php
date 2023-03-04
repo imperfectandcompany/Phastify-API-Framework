@@ -163,11 +163,11 @@ class UserController {
     }
     
 //implement next..
-//    public function logoutMultipleParams($deviceToken, $param2) {
-//        echo json_encode(array('status' => 'testing', 'message' => 'cant logout all', 'token' => $deviceToken, 'param' => $param2));
-//        http_response_code(ERROR_UNAUTHORIZED);
-//        exit;
-//    }
+    public function logoutMultipleParams($deviceToken, $param2) {
+        echo json_encode(array('status' => 'testing', 'message' => 'cant logout all', 'token' => $deviceToken, 'param' => $param2));
+        http_response_code(ERROR_UNAUTHORIZED);
+        exit;
+    }
     
     
     

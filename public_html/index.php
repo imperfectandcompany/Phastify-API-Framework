@@ -86,7 +86,7 @@ if($GLOBALS['config']['devmode'] == 1){
 // if the user is authenticated, create a new instance of the Router class and dispatch the incoming request
 $router = new Router();
 $router->add('/timeline/publicTimeline', 'TimelineController@fetchPublicTimeline', 'POST');
-$router->add('/timeline/:publicTimeline', 'TimelineController@fetchPublicTimeline', 'GET');
+$router->add('/timeline/:publicTimeline', 'TimelineController@fetchPublicTimelineParamTest', 'GET');
 
 
 //POST /logout
@@ -97,7 +97,7 @@ $router->add('/timeline/:publicTimeline', 'TimelineController@fetchPublicTimelin
 //}
 //token (string): The token passed for auth interceptor as header, also identifier for the user's current device, used to fetch the user_id.
 //all_devices (boolean): If true, logs out the user from all devices, passed as a boolean value in the request body.
-$router->add('/logout/', 'UserController@logoutAll', 'GET');
+    $router->add('/logout/', 'UserController@logoutAll', 'GET');
 
 //POST /logout/:id
 //Description: Logs out the user from a specific device and invalidates the token associated with that device.
@@ -111,7 +111,7 @@ $router->add('/logout/', 'UserController@logoutAll', 'GET');
 $router->add('/logout/', 'UserController@logout', 'POST');
 $router->add('/logout/:deviceToken', 'UserController@logoutAllParam', 'GET');
 //implement next..
-//$router->add('/logout/:deviceToken/:param2', 'UserController@logoutMultipleParams', 'POST');
+$router->add('/logout/:deviceToken/:param2', 'UserController@logoutMultipleParams', 'GET');
 
 
 //dispatch router since authentication and global variables are set!
