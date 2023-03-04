@@ -85,8 +85,8 @@ if($GLOBALS['config']['devmode'] == 1){
 
 // if the user is authenticated, create a new instance of the Router class and dispatch the incoming request
 $router = new Router();
-$router->add('/timeline/publicTimeline', 'TimelineController@fetchPublicTimeline', 'GET');
-$router->add('/timeline/:publicTimeline', 'TimelineController@fetchPublicTimeline', 'POST');
+$router->add('/timeline/publicTimeline', 'TimelineController@fetchPublicTimeline', 'POST');
+$router->add('/timeline/:publicTimeline', 'TimelineController@fetchPublicTimeline', 'GET');
 
 
 //POST /logout
@@ -110,6 +110,8 @@ $router->add('/logout/', 'UserController@logoutAll', 'GET');
 
 $router->add('/logout/', 'UserController@logout', 'POST');
 $router->add('/logout/:deviceToken', 'UserController@logoutAllParam', 'GET');
+//implement next..
+//$router->add('/logout/:deviceToken/:param2', 'UserController@logoutMultipleParams', 'POST');
 
 
 //dispatch router since authentication and global variables are set!

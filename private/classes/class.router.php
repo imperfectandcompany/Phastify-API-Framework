@@ -149,100 +149,65 @@ class Router {
         // All checks passed, params are valid
         return true;
     }
-    
-    
+
     public function dispatch($url, $dbConnection)
     {
         $url = implode('/', $url);
-        
-        // Check if the url has parameters
-        $params = array();
-        $urlSegments = explode('/', $url);
-        $routeParams = array_filter(explode('/', array_keys($this->routes)[0]), function ($val) {
-            return strpos($val, ':') !== false;
-        });
 
-        if (count($urlSegments) > count($routeParams)) {
-            foreach ($routeParams as $index => $paramName) {
-                $pos = array_search($paramName, $routeParams);
-                if (isset($urlSegments[$pos])) {
-                    $params[] = $urlSegments[$pos];
-                } else {
-                    $params[] = null;
+        // Loop through the routes to find a match
+        foreach ($this->routes as $route => $config) {
+            // Replace parameter values in URL with parameter names
+            $pattern = preg_replace('/:[^\/]+/', '([^\/]+)', $route);
+            
+            // Check if URL matches route pattern
+            if (preg_match('#^' . $pattern . '$#', $url, $matches)) {
+                // Extract parameter names and values
+                $routeParams = array_combine($config['params'], array_slice($matches, 1));
+                
+                // Replace parameter values in URL with parameter names
+                $routeUrl = str_replace(array_values($routeParams), array_keys($routeParams), $route);
+                                
+                // Check if request method is allowed for this route
+                if (!isset($config['methods'][$_SERVER['REQUEST_METHOD']])) {
+                    http_response_code(ERROR_NOT_FOUND);
+                    $GLOBALS['config']['devmode'] ? '404 - Not Found' : '404 - Not Found';
+                    return;
                 }
+                
+                // Extract controller and method from route
+                list($controller, $method) = explode('@', $config['methods'][$_SERVER['REQUEST_METHOD']]['controller']);
+                
+                // Include the controller class
+                require_once $GLOBALS['config']['private_folder'] . "/controllers/{$controller}.php";
+
+                // Check if controller class and method exist
+                if (!class_exists($controller) || !method_exists($controller, $method)) {
+                    echo (class_exists($controller)) ? "true":"false";
+                    http_response_code(ERROR_NOT_FOUND);
+                    echo $GLOBALS['config']['devmode'] ? '404 - Not Found' : '404 - Not Found';
+                    return;
+                }
+
+                // Set content type as json if its not in dev mode
+                if(!$GLOBALS['config']['devmode']){header('Content-Type: application/json');}
+                
+                // Create controller instance and call method
+                $controllerInstance = new $controller($dbConnection);
+                $controllerInstance->{$method}(...array_values($routeParams));
+                
+                return;
             }
         }
-        
-        //check if url accessed is a route that exists
-        if (!array_key_exists($url[0], $this->routes)) {
-            http_response_code(ERROR_NOT_FOUND);
-            echo $GLOBALS['config']['devmode'] ? '404 - Not Found: Endpoint is not defined as route' : '404 - Not Found';
-            if($GLOBALS['config']['devmode']){
-                echo "<h3>Given url</h3>";
-                echo "<pre>";
-                echo $url;
-                echo "</pre>";
-                echo "<h3>Routes</h3>";
-                echo "<pre>";
-                var_dump($this->routes);
-                echo "</pre>";
-            }
-            return;
-        }
-        
 
-        
-        if (!isset($this->routes[$url])) {
-            http_response_code(ERROR_NOT_FOUND);
-            echo $GLOBALS['config']['devmode'] ? '404 - Endpoint not found: '.$url : '404 - Endpoint not found';
-            return;
-        }
-        
-        // Get the request method to match expected method
-        $request_method = $_SERVER['REQUEST_METHOD'];
-        // Check if the requested method is available for this URI
-        if (!in_array($request_method, array_keys($this->routes[$url]['methods']))) {
-            http_response_code(ERROR_NOT_FOUND);
-            echo $GLOBALS['config']['devmode'] ? '405 - Request Not Allowed: Request method not allowed for this URI' : '405 - Request Not Allowed';
-            return;
-        }
-        
-        // extract the controller and method from the route, we can use $request_method since we cleared the possibility of it not being accepted
-        list($controllerName, $controllerMethod) = explode('@', $this->routes[$url]['methods'][$request_method]['controller']);
-        // include the controller class and create an instance
-        require_once $GLOBALS['config']['private_folder'] . "/controllers/{$controllerName}.php";
-        // Check if the controller class exists
-        if (!class_exists($controllerName)) {
-            http_response_code(ERROR_NOT_FOUND);
-            echo $GLOBALS['config']['devmode'] ? '404 - Not Found: Controller class does not exist ' : '404 - Not Found' ;
-            return;
-        }
-        
-        //create instance since class exists (no cap)
-        $controllerClass = new $controllerName($dbConnection);
-
-        // Check if the method exists in the controller class
-        if (!method_exists($controllerClass, $controllerMethod)) {
-            http_response_code(ERROR_NOT_FOUND);
-            echo $GLOBALS['config']['devmode'] ? '404 - Not Found: Controller method does not exist ' : '404 - Not Found' ;
-            return;
-        }
-        
-        // Check if the parameters are valid
-        $params = array_values($params);
-        if (!$this->checkParams($controllerClass, $controllerMethod, $params)) {
-            http_response_code(ERROR_BAD_REQUEST);
-            echo $GLOBALS['config']['devmode'] ? '400 - Bad Request: Invalid parameters ' : '400 - Bad Request';
-            return;
-        }
-        
-        //set content type as json if its not in dev mode
-        if(!$GLOBALS['config']['devmode']){header('Content-Type: application/json');}
-        
-        $controllerClass->{$controllerMethod}(...$params);
-
+        // No route matched the URL
+        http_response_code(ERROR_NOT_FOUND);
+        echo $GLOBALS['config']['devmode'] ? '404 - Not Found' : '404 - Not Found';
         return;
     }
+
+    
+    
+
 }
 
 ?>
