@@ -97,7 +97,7 @@ $router->add('/timeline/:publicTimeline', 'TimelineController@fetchPublicTimelin
 //}
 //token (string): The token passed for auth interceptor as header, also identifier for the user's current device, used to fetch the user_id.
 //all_devices (boolean): If true, logs out the user from all devices, passed as a boolean value in the request body.
-    $router->add('/logout/', 'UserController@logoutAll', 'GET');
+    $router->add('/logout', 'UserController@logoutAll', 'GET');
 
 //POST /logout/:id
 //Description: Logs out the user from a specific device and invalidates the token associated with that device.
@@ -108,7 +108,7 @@ $router->add('/timeline/:publicTimeline', 'TimelineController@fetchPublicTimelin
 //token (string): The token passed for auth interceptor as header, also identifier for the user's current device, used to fetch the user_id.
 //token_to_logout (string): The token of the device to log out from. This is passed as a string value in the request body.
 
-$router->add('/logout/', 'UserController@logout', 'POST');
+$router->add('/logout', 'UserController@logout', 'POST');
 $router->add('/logout/:deviceToken', 'UserController@logoutAllParam', 'GET');
 //implement next..
 $router->add('/logout/:deviceToken/:param2', 'UserController@logoutMultipleParams', 'GET');

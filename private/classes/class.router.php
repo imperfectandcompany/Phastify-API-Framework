@@ -1,59 +1,47 @@
 <?php
+
 class Router {
     
     protected $routes = [];
 
     public function add($uri, $controller, $requestMethod)
     {
-        // Check if the URI is empty
-        if (empty($uri)) {
-            throw new Exception("Route URI cannot be empty.");
+        // Check if the URI is valid
+        if (empty($uri) || substr($uri, 0, 1) !== '/') {
+            throw new Exception("Invalid route URI: '$uri'.");
         }
         
-        // Add slash to the beginning of the URI if it is missing
-        if (substr($uri, 0, 1) !== '/') {
-            $uri = '/' . $uri;
-        }
-
-//        if (substr($uri, -1) === '/') {
-//            throw new Exception("Route cannot end with '/'.");
-//        }
+        // Remove trailing slash from the URI
+        $uri = rtrim($uri, '/');
         
-        // Check if the URI ends with a slash and remove it if it does
-        if (substr($uri, -1) === '/') {
-            $uri = rtrim($uri, '/');
-        }
-        
+        // Check if the controller and method names are valid
         if (strpos($controller, '@') === false) {
-            throw new Exception("Controller and method should be separated by '@'.");
+            throw new Exception("Invalid controller and method name: '$controller'.");
         }
         
-        $controllerParts = explode('@', $controller);
-        $controllerName = $controllerParts[0];
-        $methodName = $controllerParts[1];
+        // Split the controller and method names
+        list($controllerName, $methodName) = explode('@', $controller);
 
+        // Check if the method name is valid
         if (empty($methodName)) {
-            throw new Exception("Method not provided after @ for '$controllerName'.");
+            throw new Exception("Method name not provided for controller: '$controllerName'.");
         }
         
-        // Check if a route with the same URI already exists
-        if (isset($this->routes[$uri])) {
-            if(isset($this->routes[$uri]['methods'][$requestMethod])){
-                throw new Exception("Route with URI '$uri' already exists.");
-            }
+        // Check if a route with the same URI and request method already exists
+        if (isset($this->routes[$uri]['methods'][$requestMethod])) {
+            throw new Exception("Route with URI '$uri' and request method '$requestMethod' already exists.");
         }
         
-        // checks if the endpoint matches, if so then checks if it has the same url location of any that exist, if so we can access the endpoint twice so throw error
-        //works for parameters and segments alike muahaha ezpz
+        $newSegments = explode('/', $uri);
+
+        
+        // Check if the endpoint matches any existing routes
         foreach ($this->routes as $existingUri => $existingRoute) {
-            //Let endpoint exist since the request method is different...
-            $existingSegments = explode('/', $existingUri);
-            $newSegments = explode('/', $uri);
-            
-            if (count($existingSegments) === count($newSegments)) {
+            if ($existingUri !== $uri && count($existingRoute['params']) === count($newSegments)) {
+                $existingSegments = explode('/', $existingUri);
+                
                 $same = true;
                 $params = array();
-                
                 for ($i = 0; $i < count($existingSegments); $i++) {
                     if ($existingSegments[$i] !== $newSegments[$i] && substr($existingSegments[$i], 0, 1) !== ':') {
                         $same = false;
@@ -69,65 +57,36 @@ class Router {
             }
         }
         
-        // Get the list of files in the controllers directory
+        // Check if the controller file exists
         $controllerDir = '../private/controllers/';
-        $files = scandir($controllerDir);
-
-        // Loop through the files and check if a file with the expected name exists
-        $found = false;
-        foreach ($files as $file) {
-            if (strtolower($file) === strtolower("$controllerName") . '.php') {
-                $found = true;
-                break;
-            }
+        $controllerPath = $controllerDir . $controllerName . '.php';
+        
+        if (!file_exists($controllerPath)) {
+            throw new Exception("Controller file '$controllerName.php' not found.");
         }
 
-        if (!$found) {
-            throw new Exception("Controller '$controllerName' does not exist.");
-        }
-
-        $controllerPath = $GLOBALS['config']['private_folder'] . '/controllers/' . $controllerName . '.php';
-
+        // Check if the method exists in the controller file
         $controllerContents = file_get_contents($controllerPath);
 
         if (strpos($controllerContents, "function $methodName") === false) {
             throw new Exception("Method '$methodName' does not exist in controller '$controllerName'.");
         }
 
+        // Check if the request method is valid
         if (!in_array($requestMethod, ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'])) {
-            throw new Exception("Invalid request method.");
+            throw new Exception("Invalid request method: '$requestMethod'.");
         }
         
+        // Extract parameters from the URI
+        $params = array_filter(explode('/', $uri), function($segment) {
+            return substr($segment, 0, 1) == ':';
+        });
         
-        $params = array();
-        $uriSegments = explode('/', $uri);
-        
-        foreach ($uriSegments as $segment) {
-            if (substr($segment, 0, 1) == ':') {
-                $params[] = substr($segment, 1);
-            }
-        }
-        if (!isset($this->routes[$uri])) {
-            $this->routes[$uri] = [
-                'params' => $params,
-                'methods' => [
-                    $requestMethod => [
-                        'controller' => $controller
-                    ]
-                ]
-            ];
-        } else {
-            // Check if the request method is already registered for the URI
-            if (isset($this->routes[$uri]['methods'][$requestMethod])) {
-                // If it is, throw an error or handle it however you want
-            } else {
-                // If it's not, add it to the list of available methods for this URI
-                $this->routes[$uri]['methods'][$requestMethod] = [
-                    'controller' => $controller
-                ];
-            }
-        }
+        // Add the new route
+        $this->routes[$uri]['params'] = $params;
+        $this->routes[$uri]['methods'][$requestMethod]['controller'] = $controller;
     }
+
 
     public function dispatch($url, $dbConnection)
     {
@@ -140,6 +99,7 @@ class Router {
 
             // Check if URL matches route pattern
             if (preg_match('#^' . $pattern . '$#', $url, $matches)) {
+
                 // Extract parameter names and values
                 $routeParams = array_combine($config['params'], array_slice($matches, 1));
 
@@ -148,94 +108,111 @@ class Router {
 
                 // Check if request method is allowed for this route
                 if (!isset($config['methods'][$_SERVER['REQUEST_METHOD']])) {
-                    http_response_code(ERROR_NOT_FOUND);
-                    echo $GLOBALS['config']['devmode'] ? '404 - Not Found' : '404 - Not Found';
+                    $this->handleError("Route with URI '$url' and request method '{$_SERVER['REQUEST_METHOD']}' not found.");
                     return;
                 }
 
                 // Extract controller and method from route
                 list($controller, $method) = explode('@', $config['methods'][$_SERVER['REQUEST_METHOD']]['controller']);
-
+                
                 // Include the controller class
                 require_once $GLOBALS['config']['private_folder'] . "/controllers/{$controller}.php";
 
-                // Check if controller class and method exist
+                // Check if controller and method exist
                 if (!class_exists($controller) || !method_exists($controller, $method)) {
-                    http_response_code(ERROR_NOT_FOUND);
-                    echo $GLOBALS['config']['devmode'] ? '404 - Not Found' : '404 - Not Found';
+                    $this->handleError("Controller or method not found for route with URI '$url'.");
                     return;
-                }
-                
-                // Check if the number of route params matches the number of defined params
-                if (count($routeParams) != count($config['params'])) {
-                    http_response_code(ERROR_BAD_REQUEST);
-                    echo $GLOBALS['config']['devmode'] ? '400 - Bad Request: Invalid number of parameters ' : '400 - Bad Request';
-                    return false;
-                }
-                
-                // Check if the number of route params matches the number of defined params, accounting for optional params
-                $requiredParamsCount = count(array_filter($config['params'], function($param) {
-                    return substr($param, -1) !== '?';
-                }));
-                if (count($routeParams) < $requiredParamsCount || count($routeParams) > count($config['params'])) {
-                    http_response_code(ERROR_BAD_REQUEST);
-                    echo $GLOBALS['config']['devmode'] ? '400 - Bad Request: Invalid number of parameters ' : '400 - Bad Request';
-                    return false;
                 }
 
                 // Combine parameter names and values into associative array, ignoring optional parameters with no value
                 $params = array_intersect_key($routeParams, array_flip(array_filter($config['params'], function($param) use ($routeParams) {
                     return substr($param, -1) !== '?' || array_key_exists(rtrim($param, '?'), $routeParams);
                 })));
-
-                // Combine parameter names and values into associative array
-                $params = array_combine($config['params'], array_values($routeParams));
                 
-                // Check if the parameters are valid
-                $methodParams = new ReflectionMethod($controller, $method);
-                $numParams = $methodParams->getNumberOfParameters();
-                if (count($params) != $numParams) {
-                    http_response_code(ERROR_BAD_REQUEST);
-                    echo $GLOBALS['config']['devmode'] ? '400 - Bad Request: Invalid number of parameters ' : '400 - Bad Request';
+
+                // Validate the parameters
+                $validatedParams = $this->validateParams($controller, $method, $params);
+                if ($validatedParams === false) {
+                    $this->handleError("Invalid parameters for route with URI '$url'.");
                     return;
                 }
 
-                // Get the method's parameter types
-                $methodParamsTypes = $methodParams->getParameters();
-                $paramTypes = array();
-                foreach ($methodParamsTypes as $methodParamType) {
-                    $paramType = (string)$methodParamType->getType();
-                    if (!empty($paramType)) {
-                        $paramTypes[] = $paramType;
-                    }
-                }
-                
-                // Check if the types of the parameters match the method's parameter types
-                $validatedParams = array();
-                foreach ($params as $key => $param) {
-                    if (empty($paramTypes) || $paramTypes[$key] == 'string') {
-                        $validatedParams[] = (string)$param;
-                    } elseif ($paramTypes[$key] == 'int') {
-                        $validatedParams[] = (int)$param;
-                    } elseif ($paramTypes[$key] == 'float') {
-                        $validatedParams[] = (float)$param;
-                    } elseif ($paramTypes[$key] == 'bool') {
-                        $validatedParams[] = (bool)$param;
-                    }
-                }
-
-                $params = $validatedParams;
-                
-
                 // Call the controller method with the parameters
                 $controllerInstance = new $controller($dbConnection);
-                $controllerInstance->{$method}(...$params);
-                return true;
+                $controllerInstance->{$method}(...$validatedParams);
+                return;
             }
+        }
+        
+        // If no route is found, handle the error
+        $this->handleError("Route with URI '$url' not found.");
+    }
+
+    // Handle errors in development mode by displaying a message and error code
+    private function handleError($message) {
+        http_response_code(ERROR_NOT_FOUND);
+        if ($GLOBALS['config']['devmode']) {
+            echo "Error: $message";
+        } else {
+            echo "Error: Route not found.";
         }
     }
 
+    private function validateParams($controller, $method, $params) {
+        $methodParams = new ReflectionMethod($controller, $method);
+        $paramTypes = array_map(function($param) {
+            return [
+                'param' => $param,
+                'type' => $param->getType(),
+            ];
+        }, $methodParams->getParameters());
+    
+        // Validate the number and types of parameters
+        if (count($params) != count($paramTypes)) {
+            return false;
+        }
+    
+        $validatedParams = array();
+    
+        
+        foreach ($paramTypes as $param) {
+            $paramName = ':'.$param['param']->getName();
+            $paramType = $param['type'] ? $param['type']->getName() : 'string';
+
+            //checks to see if the parameter within the function matches the one in route
+            if (!array_key_exists($paramName, $params)) {
+                return false;
+            }
+
+            $value = $params[$paramName];
+            
+            echo '<pre>' , $paramType , '</pre>';
+    
+            switch ($paramType) {
+                case 'int':
+                    $validatedValue = filter_var($value, FILTER_VALIDATE_INT);
+                    break;
+                case 'float':
+                    $validatedValue = filter_var($value, FILTER_VALIDATE_FLOAT);
+                    break;
+                case 'bool':
+                    $validatedValue = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                    break;
+                default:
+                    $validatedValue = $value;
+            }
+    
+            if ($validatedValue === false) {
+                return false;
+            }
+    
+            $validatedParams[] = $validatedValue;
+        }
+    
+        return $validatedParams;
+    }
+    
+
 }
 
-?>
 
