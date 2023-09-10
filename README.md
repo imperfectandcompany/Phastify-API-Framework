@@ -1,5 +1,7 @@
 # postogon-api-v2
 
+notes: gotta add validation for param in the sense that when we add a route with a param, we should make sure the method within controller being called includes that within the function param to prevent it from continuing.
+
 Router class:
 ## Function: add
 
