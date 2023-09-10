@@ -81,10 +81,29 @@ class Router {
         $params = array_filter(explode('/', $uri), function($segment) {
             return substr($segment, 0, 1) == ':';
         });
-        
+
+        // Check if any parameters are optional
+        $optionalParams = array_filter($params, function($param) {
+            return substr($param, -1) === '?';
+        });
+
+        // Remove the '?' character from optional parameters
+        $optionalParams = array_map(function($param) {
+            return rtrim($param, '?~');
+        }, $optionalParams);
+
         // Add the new route
-        $this->routes[$uri]['params'] = $params;
-        $this->routes[$uri]['methods'][$requestMethod]['controller'] = $controller;
+        $route = [
+            'params' => $params,
+            'optional_params' => $optionalParams,
+            'methods' => [
+                $requestMethod => [
+                    'controller' => $controller,
+                ],
+            ],
+        ];
+        
+        $this->routes[$uri] = $route;
     }
 
 
@@ -95,17 +114,24 @@ class Router {
         // Loop through the routes to find a match
         foreach ($this->routes as $route => $config) {
             // Replace parameter values in URL with parameter names
-            $pattern = preg_replace('/:[^\/]+/', '([^\/]+)', $route);
+            $pattern = preg_replace('/:[^\/~]+/', '([^\/~]+)', $route);
 
             // Check if URL matches route pattern
             if (preg_match('#^' . $pattern . '$#', $url, $matches)) {
 
                 // Extract parameter names and values
                 $routeParams = array_combine($config['params'], array_slice($matches, 1));
+                $optionalParams = $config['optional_params'] ?? [];
 
                 // Replace parameter values in URL with parameter names
                 $routeUrl = str_replace(array_values($routeParams), array_keys($routeParams), $route);
+                foreach ($optionalParams as $param) {
+                    if (!isset($routeParams[$param])) {
+                        $routeParams[$param] = null;
+                    }
+                }
 
+                echo var_dump($config['methods']);
                 // Check if request method is allowed for this route
                 if (!isset($config['methods'][$_SERVER['REQUEST_METHOD']])) {
                     $this->handleError("Route with URI '$url' and request method '{$_SERVER['REQUEST_METHOD']}' not found.");
@@ -124,12 +150,11 @@ class Router {
                     return;
                 }
 
-                // Combine parameter names and values into associative array, ignoring optional parameters with no value
-                $params = array_intersect_key($routeParams, array_flip(array_filter($config['params'], function($param) use ($routeParams) {
+                 // Combine parameter names and values into associative array, ignoring optional parameters with no value
+                 $params = array_intersect_key($routeParams, array_flip(array_filter($config['params'], function($param) use ($routeParams) {
                     return substr($param, -1) !== '?' || array_key_exists(rtrim($param, '?'), $routeParams);
                 })));
                 
-
                 // Validate the parameters
                 $validatedParams = $this->validateParams($controller, $method, $params);
                 if ($validatedParams === false) {
@@ -164,29 +189,38 @@ class Router {
             return [
                 'param' => $param,
                 'type' => $param->getType(),
+                'isOptional' => $param->isOptional(),
             ];
         }, $methodParams->getParameters());
+
     
         // Validate the number and types of parameters
-        if (count($params) != count($paramTypes)) {
+        if (count($params) < count(array_filter($paramTypes, function($param) {
+            return !$param['isOptional'];
+        }))) {
             return false;
         }
     
         $validatedParams = array();
-    
+        
         
         foreach ($paramTypes as $param) {
             $paramName = ':'.$param['param']->getName();
             $paramType = $param['type'] ? $param['type']->getName() : 'string';
 
+
             //checks to see if the parameter within the function matches the one in route
             if (!array_key_exists($paramName, $params)) {
-                return false;
+                if ($param['isOptional']) {
+                    $validatedParams[] = null;
+                    continue;
+                } else {
+                    return false;
+                }
             }
 
             $value = $params[$paramName];
             
-            echo '<pre>' , $paramType , '</pre>';
     
             switch ($paramType) {
                 case 'int':

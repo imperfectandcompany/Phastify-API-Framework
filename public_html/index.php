@@ -110,6 +110,8 @@ $router->add('/timeline/:publicTimeline', 'TimelineController@fetchPublicTimelin
 
 $router->add('/logout', 'UserController@logout', 'POST');
 $router->add('/logout/:deviceToken', 'UserController@logoutAllParam', 'GET');
+$router->add('/logout/:deviceToken/:param2/:optionalParam?', 'UserController@logoutMultipleParams', 'GET');
+
 //implement next..
 $router->add('/logout/:deviceToken/:param2', 'UserController@logoutMultipleParams', 'GET');
 

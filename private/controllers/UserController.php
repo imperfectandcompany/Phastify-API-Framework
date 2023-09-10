@@ -162,9 +162,15 @@ class UserController {
         exit;
     }
     
+    public function logoutMultipleParams(string $deviceToken, int $param2, ?string $optionalParam = "jcas") {
+        echo json_encode(array('status' => 'testing', 'message' => 'cant logout all', 'token' => $deviceToken, 'param' => $param2, 'Optional' => $optionalParam));
+        http_response_code(ERROR_UNAUTHORIZED);
+        exit;
+    }
+
     //implement next..
-    public function logoutMultipleParams(string $deviceToken, int $param2) {
-        echo json_encode(array('status' => 'testing', 'message' => 'cant logout all', 'token' => $deviceToken, 'param' => $param2));
+    public function logoutMultOptional(string $deviceToken, int $param2, ?string $optionalParam = "default fr") {
+        echo json_encode(array('status' => 'testing', 'message' => 'cant logout all', 'token' => $deviceToken, 'param' => $param2, 'optional' => $optionalParam));
         http_response_code(ERROR_UNAUTHORIZED);
         exit;
     }
