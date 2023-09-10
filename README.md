@@ -2,6 +2,14 @@
 
 notes: gotta add validation for param in the sense that when we add a route with a param, we should make sure the method within controller being called includes that within the function param to prevent it from continuing.
 
+add validation for this error:
+https://v2.api.postogon.com/authenticate?token=fawwew
+<br />
+<b>Fatal error</b>:  Uncaught Error: Call to undefined method Router::getRoutes() in /usr/www/igfastdl/postogon-api/public_html/index.php:59
+Stack trace:
+#0 {main}
+  thrown in <b>/usr/www/igfastdl/postogon-api/public_html/index.php</b> on line <b>59</b><br />
+
 Router class:
 ## Function: add
 
