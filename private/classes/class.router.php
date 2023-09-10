@@ -27,6 +27,7 @@ class Router {
             throw new Exception("Method name not provided for controller: '$controllerName'.");
         }
         
+        
         // Check if a route with the same URI and request method already exists
         if (isset($this->routes[$uri]['methods'][$requestMethod])) {
             throw new Exception("Route with URI '$uri' and request method '$requestMethod' already exists.");
@@ -34,7 +35,6 @@ class Router {
         
         $newSegments = explode('/', $uri);
 
-        
         // Check if the endpoint matches any existing routes
         foreach ($this->routes as $existingUri => $existingRoute) {
             if ($existingUri !== $uri && count($existingRoute['params']) === count($newSegments)) {
@@ -42,6 +42,8 @@ class Router {
                 
                 $same = true;
                 $params = array();
+
+                
                 for ($i = 0; $i < count($existingSegments); $i++) {
                     if ($existingSegments[$i] !== $newSegments[$i] && substr($existingSegments[$i], 0, 1) !== ':') {
                         $same = false;
@@ -92,24 +94,25 @@ class Router {
             return rtrim($param, '?~');
         }, $optionalParams);
 
-        // Add the new route
-        $route = [
-            'params' => $params,
-            'optional_params' => $optionalParams,
-            'methods' => [
-                $requestMethod => [
-                    'controller' => $controller,
-                ],
-            ],
+        if (!isset($this->routes[$uri])) {
+            $this->routes[$uri] = [
+                'params' => $params,
+                'optional_params' => $optionalParams,
+                'methods' => []
+            ];
+        }
+    
+        $this->routes[$uri]['methods'][$requestMethod] = [
+            'controller' => $controller,
         ];
-        
-        $this->routes[$uri] = $route;
+
     }
 
 
     public function dispatch($url, $dbConnection)
     {
         $url = implode('/', $url);
+        $httpMethod = $_SERVER['REQUEST_METHOD'];
 
         // Loop through the routes to find a match
         foreach ($this->routes as $route => $config) {
@@ -118,6 +121,11 @@ class Router {
 
             // Check if URL matches route pattern
             if (preg_match('#^' . $pattern . '$#', $url, $matches)) {
+
+                // Check if request method is allowed for this route
+                if (!isset($config['methods'][$httpMethod])) {
+                    continue; // Just skip this route and check the next one
+                }
 
                 // Extract parameter names and values
                 $routeParams = array_combine($config['params'], array_slice($matches, 1));
@@ -131,7 +139,6 @@ class Router {
                     }
                 }
 
-                echo var_dump($config['methods']);
                 // Check if request method is allowed for this route
                 if (!isset($config['methods'][$_SERVER['REQUEST_METHOD']])) {
                     $this->handleError("Route with URI '$url' and request method '{$_SERVER['REQUEST_METHOD']}' not found.");

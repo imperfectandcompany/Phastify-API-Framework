@@ -88,6 +88,22 @@ $router = new Router();
 $router->add('/timeline/publicTimeline', 'TimelineController@fetchPublicTimeline', 'POST');
 $router->add('/timeline/:publicTimeline', 'TimelineController@fetchPublicTimelineParamTest', 'GET');
 
+// Return a list of all integrations for the authenticated user 
+$router->add('/integrations', 'IntegrationController@getAllIntegrations', 'GET');
+
+// Create a new integration for the authenticated user
+$router->add('/integrations', 'IntegrationController@createIntegration', 'POST');
+
+// Update an existing integration for the authenticated user
+$router->add('/integrations/:id', 'IntegrationController@updateIntegration', 'PUT');
+
+// Delete an existing integration for the authenticated user
+$router->add('/integrations/:id', 'IntegrationController@deleteIntegration', 'DELETE');
+
+// Refresh the data for an integration for the authenticated user
+$router->add('/integrations/:id/refresh', 'IntegrationController@refreshIntegrationData', 'POST');
+
+
 
 //POST /logout
 //Description: Logs out the user from the current device and invalidates the token unless all_devices is passed as true, in which case, the user is logged out from all devices, and all tokens are invalidated.
