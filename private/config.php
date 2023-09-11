@@ -20,7 +20,7 @@ $GLOBALS['db_conf']['db_db']    =    $table;
 $GLOBALS['db_conf']['port']     =    '3306';
 $GLOBALS['db_conf']['db_charset']  = 'utf8mb4';
 
-$GLOBALS['config']['devmode'] = 0; //This enables dev mode to print out dev inforamtion -- DO NOT USE IN PRODUCTION!
+$GLOBALS['config']['devmode'] = 1; //This enables dev mode to print out dev inforamtion -- DO NOT USE IN PRODUCTION!
 
 //General settings
 $GLOBALS['config']['max_username_length'] = '32';

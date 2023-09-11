@@ -168,6 +168,12 @@ class UserController {
         exit;
     }
 
+    public function theOnewokring(string $deviceToken, int $toggle, string $optionalParam) {
+        echo json_encode(array('status' => 'testing', 'message' => 'cant logout all', 'token' => $deviceToken, 'param' => $toggle, 'Optional' => $optionalParam));
+        http_response_code(ERROR_UNAUTHORIZED);
+        exit;
+    }
+
     //implement next..
     public function logoutMultOptional(string $deviceToken, int $param2, ?string $optionalParam = "default fr") {
         echo json_encode(array('status' => 'testing', 'message' => 'cant logout all', 'token' => $deviceToken, 'param' => $param2, 'optional' => $optionalParam));

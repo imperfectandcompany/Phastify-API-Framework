@@ -1,5 +1,4 @@
 <?php
-include($GLOBALS['config']['private_folder'].'/classes/class.devmode.php');
 
 class DevmodeController {
         
@@ -27,10 +26,14 @@ class DevmodeController {
         }
     }
 
-    public function toggleDevModeValue(bool $status) {
+    public function toggleDevModeValue(string $value) {
         $devMode = new Devmode($this->dbConnection);
-
-        $result = $devMode->toggleDevModeFromValue($status);
+        if($value != null){
+            $bool = $value == 'true' ? true : false;
+            $result = $devMode->toggleDevModeFromValue($bool);
+        } else {
+            $result = $devMode->toggleDevMode();
+        }
         
         if ($result) {
             sendResponse('success', ['message' => 'Devmode status updated'], SUCCESS_OK);
@@ -39,3 +42,4 @@ class DevmodeController {
         }
     }
 }
+?>

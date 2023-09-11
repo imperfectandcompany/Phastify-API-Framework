@@ -189,8 +189,9 @@ class DatabaseConnector {
         return $this->runQuery("insert", 'INSERT INTO ' . $table . ' (' . $rows . ') VALUES (' . $values . ') ON DUPLICATE KEY UPDATE ' . $update_values, $filter_params);
         /*INSERT INTO t1 (a,b,c) VALUES (1,2,3),(4,5,6)  ON DUPLICATE KEY UPDATE c=VALUES(a)+VALUES(b);*/
     }
-    public function updateData($table, $setClause, $whereClause, $filter_params = null) {
-        $query =  'UPDATE ' . $table . ' SET ' . $setClause . ' WHERE ' . $whereClause;
+    public function updateData($table, $setClause, $whereClause =null, $filter_params = null) {
+        $whereClause = $whereClause !== null ? ' WHERE ' . $whereClause : null;
+        $query =  'UPDATE ' . $table . ' SET ' . $setClause . $whereClause;
         return $this->runQuery("update", $query, $filter_params);
     }
     public function deleteData($table, $rows, $filter_params = null) {

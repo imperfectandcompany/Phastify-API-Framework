@@ -111,11 +111,36 @@ class Router {
     public function getRoutes() {
         return $this->routes;
     }
-
-    public function routeExists($url, $route) {
-        $url = implode('/', $url);
-        return array_key_exists($url, $route);
+    
+    public function routeExists($urlParts, $routes) {
+        foreach ($routes as $route => $routeDetails) {
+            $routeParts = explode('/', $route);
+            
+            // Skip the route if the number of parts doesn't match
+            if (count($urlParts) != count($routeParts)) {
+                continue;
+            }
+    
+            $matches = true; // Assume it's a match until proven otherwise
+            for ($i = 0; $i < count($urlParts); $i++) {
+                // If a route part is a parameter, e.g. starts with ':', it's considered a match
+                // Otherwise, the exact route part and URL part must match
+                if (!(strpos($routeParts[$i], ':') === 0 || $routeParts[$i] == $urlParts[$i])) {
+                    $matches = false;
+                    break;  // Break out of the for loop if any part doesn't match
+                }
+            }
+            
+            // If we found a match, return true immediately
+            if ($matches) {
+                return true;
+            }
+        }
+    
+        // If we've checked all routes and found no matches, return false
+        return false;
     }
+    
 
 
     public function dispatch($url, $dbConnection)

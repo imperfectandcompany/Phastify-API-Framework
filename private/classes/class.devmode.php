@@ -25,7 +25,7 @@ class Devmode {
 
     private function setDevModeStatus($status){
         // Assuming your database class has an update function
-        return $this->dbObject->updateData("app_settings", "devmode = :devmode", "WHERE id = 1", [
+        return $this->dbObject->updateData("app_settings", "devmode = :devmode", null, [
             [ 'value' => $status, 'type' => PDO::PARAM_BOOL ]
         ]);
     }
