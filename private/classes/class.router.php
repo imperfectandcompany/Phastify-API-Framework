@@ -113,6 +113,7 @@ class Router {
     {
         $url = implode('/', $url);
         $httpMethod = $_SERVER['REQUEST_METHOD'];
+        $routeMatched = false; // Flag to keep track if a route was dispatched
 
         // Loop through the routes to find a match
         foreach ($this->routes as $route => $config) {
@@ -165,6 +166,7 @@ class Router {
                 // Validate the parameters
                 $validatedParams = $this->validateParams($controller, $method, $params);
                 if ($validatedParams === false) {
+                    //9-10-23 add specific error handling, missing parameter or wrong data type etc.
                     $this->handleError("Invalid parameters for route with URI '$url'.");
                     return;
                 }
@@ -172,12 +174,14 @@ class Router {
                 // Call the controller method with the parameters
                 $controllerInstance = new $controller($dbConnection);
                 $controllerInstance->{$method}(...$validatedParams);
+                $routeMatched = true; // Set the flag to true as a route was dispatched
                 return;
             }
         }
-        
+        if (!$routeMatched) {
         // If no route is found, handle the error
         $this->handleError("Route with URI '$url' not found.");
+        }
     }
 
     // Handle errors in development mode by displaying a message and error code

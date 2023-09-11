@@ -37,7 +37,7 @@ class TimelineController {
     }
     
     
-    public function fetchPublicTimelineParamTest($param)
+    public function fetchPublicTimelineParamTest(int $publicTimeline)
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
             http_response_code(ERROR_METHOD_NOT_ALLOWED);
@@ -45,7 +45,7 @@ class TimelineController {
             return;
         }
         
-        echo $param;
+        echo $publicTimeline;
         
         $timeline = new Timeline($this->dbConnection);
         // Fetch the public timeline data using $this->dbConnection

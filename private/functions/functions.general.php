@@ -36,3 +36,24 @@ function display_feedback($messages = null)
         }
     }
 }
+
+function sendResponse($status, $data, $httpCode) {
+    echo json_encode(['status' => $status] + $data);
+    http_response_code($httpCode);
+}
+
+
+/**
+ * Utility function to check if the given input fields are set and not empty.
+ * Returns an error message if any of the fields are missing.
+ */
+function checkInputFields($inputFields, $postBody) {
+    foreach ($inputFields as $field) {
+        if (!isset($postBody->{$field}) || empty($postBody->{$field})) {
+            $error = "Error: " . ucfirst($field) . " field is required";
+            echo json_encode(array('status' => 'error', 'message' => $error));
+            http_response_code(400);  // Bad Request
+            exit;
+        }
+    }
+}

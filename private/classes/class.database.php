@@ -189,8 +189,9 @@ class DatabaseConnector {
         return $this->runQuery("insert", 'INSERT INTO ' . $table . ' (' . $rows . ') VALUES (' . $values . ') ON DUPLICATE KEY UPDATE ' . $update_values, $filter_params);
         /*INSERT INTO t1 (a,b,c) VALUES (1,2,3),(4,5,6)  ON DUPLICATE KEY UPDATE c=VALUES(a)+VALUES(b);*/
     }
-    public function updateData($table, $rows, $filter_params = null) {
-        return $this->runQuery("update", 'UPDATE ' . $table . ' SET ' . $rows, $filter_params);
+    public function updateData($table, $setClause, $whereClause, $filter_params = null) {
+        $query =  'UPDATE ' . $table . ' SET ' . $setClause . ' WHERE ' . $whereClause;
+        return $this->runQuery("update", $query, $filter_params);
     }
     public function deleteData($table, $rows, $filter_params = null) {
         return $this->runQuery("delete", 'DELETE FROM ' . $table . ' ' . $rows, $filter_params);
@@ -213,11 +214,11 @@ class DatabaseConnector {
                     return array("insertID" => $this->dbConnection->lastInsertId());
                 break;
                 case "update": //insert
-                    //return array("insertID" => $this->dbConnection->lastInsertId());
+                    return array("insertID" => $this->dbConnection->lastInsertId());
                     return true;
                 break;
                 case "delete": //insert
-                    //return array("insertID" => $this->dbConnection->lastInsertId());
+                    return array("insertID" => $this->dbConnection->lastInsertId());
                     return true;
                 break;
                 default:
