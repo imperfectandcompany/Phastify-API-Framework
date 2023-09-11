@@ -29,16 +29,19 @@ class DevmodeController {
     public function toggleDevModeValue(string $value) {
         $devMode = new Devmode($this->dbConnection);
         if($value != null){
-            $bool = $value == 'true' ? true : false;
-            $result = $devMode->toggleDevModeFromValue($bool);
+            if($value == 'true' || $value == 'false' || $value == '1' || $value == '0'){
+                $bool = $value == 'true' || $value == '1' ? true : false;
+                $result = $devMode->toggleDevModeFromValue($bool);
+                if ($result) {
+                    sendResponse('success', ['message' => 'Devmode status updated'], SUCCESS_OK);
+                } else {
+                    sendResponse('error', ['message' => 'Unable to update devmode status'], ERROR_INTERNAL_SERVER);
+                }
+            } else {
+                sendResponse('error', ['message' => $value . ' is not a true or false value'], ERROR_INTERNAL_SERVER);
+            }
         } else {
-            $result = $devMode->toggleDevMode();
-        }
-        
-        if ($result) {
-            sendResponse('success', ['message' => 'Devmode status updated'], SUCCESS_OK);
-        } else {
-            sendResponse('error', ['message' => 'Unable to update devmode status'], ERROR_INTERNAL_SERVER);
+            sendResponse('error', ['message' => 'Value for toggle cannot be null'], ERROR_INTERNAL_SERVER);
         }
     }
 }

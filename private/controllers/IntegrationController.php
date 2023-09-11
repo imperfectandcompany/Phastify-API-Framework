@@ -16,6 +16,26 @@
             sendResponse('success', ['integrations' => $integrations], SUCCESS_OK);
         }
         
+        public function getIntegration($id) {
+            $integration = new Integration($this->dbConnection);
+
+            // Check if integration exists before authorization check.
+            if (!$integration->doesIntegrationExist($id)) {
+                sendResponse('error', ['message' => 'Integration ID does not exist'], ERROR_NOT_FOUND);
+                return;
+            }
+        
+            if (!$integration->doesIntegrationBelongToUser($id, $GLOBALS['user_id'])) {
+                sendResponse('error', ['message' => 'Unauthorized to view this integration'], ERROR_FORBIDDEN);
+                return;
+            }
+
+            $integration = $integration->getIntegrationsById($id);
+
+
+            sendResponse('success', ['integration' => $integration], SUCCESS_OK);
+        }
+
         public function createIntegration() {
             try {
                 $postBody = json_decode(file_get_contents("php://input"));

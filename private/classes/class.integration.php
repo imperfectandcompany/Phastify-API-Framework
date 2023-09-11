@@ -17,6 +17,16 @@ class Integration {
 
         return $this->dbConnection->viewSingleData($table, $select, $whereClause, $filterParams)['result'];
     }
+
+    // Get all integrations by user ID
+    public function getIntegrationsById($id) {
+        $table = 'integrations';
+        $select = '*';
+        $whereClause = 'WHERE id = :id';
+        $filterParams = makeFilterParams($id);
+
+        return $this->dbConnection->viewSingleData($table, $select, $whereClause, $filterParams)['result'];
+    }
     
     // Create a new integration for the user
     public function createIntegrationForUser($userId, $data) {

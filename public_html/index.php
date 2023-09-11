@@ -108,6 +108,9 @@ $router->add('/devmode/toggle/:value', 'DevmodeController@toggleDevModeValue', '
 // Return a list of all integrations for the authenticated user 
 $router->add('/integrations', 'IntegrationController@getAllIntegrations', 'GET');
 
+// Returns a integration details based on the provided ID
+$router->add('/integrations/:id', 'IntegrationController@getIntegration', 'GET');
+
 // Create a new integration for the authenticated user
 $router->add('/integrations', 'IntegrationController@createIntegration', 'POST');
 
