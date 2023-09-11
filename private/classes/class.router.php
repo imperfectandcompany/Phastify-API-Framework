@@ -108,6 +108,15 @@ class Router {
 
     }
 
+    public function getRoutes() {
+        return $this->routes;
+    }
+
+    public function routeExists($url, $route) {
+        $url = implode('/', $url);
+        return array_key_exists($url, $route);
+    }
+
 
     public function dispatch($url, $dbConnection)
     {
