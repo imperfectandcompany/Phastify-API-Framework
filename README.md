@@ -10,6 +10,61 @@ Stack trace:
 #0 {main}
   thrown in <b>/usr/www/igfastdl/postogon-api/public_html/index.php</b> on line <b>59</b><br />
 
+
+### Introduction of DevMode
+
+With the implementation of a development mode (`devmode`), our RESTful Web Service is now endowed with a mode that makes it more streamlined and hassle-free for our developers during the application development phase.
+
+### What is `devmode`?
+
+`devmode` is a feature designed to simplify the development and testing process. When activated, it avoids the need for token-based authentication for each request, making it easier for developers to test different endpoints without having to worry about providing or refreshing authentication tokens. This can significantly speed up development, but it's essential to remember that `devmode` should **never** be activated in production environments, as it bypasses certain security checks.
+
+### Endpoints:
+
+1. **Get Current DevMode Status**
+    - **Endpoint**: `/devmode`
+    - **HTTP Method**: GET
+    - **Description**: Retrieves the current status of `devmode`, returning whether it's turned on (`true`) or off (`false`).
+    - **Usage**: 
+      ```http
+      GET /devmode
+      ```
+
+2. **Toggle DevMode**
+    - **Endpoint**: `/devmode/toggle`
+    - **HTTP Method**: GET
+    - **Description**: Toggles the current `devmode` status. If it's on, it will be turned off and vice versa.
+    - **Usage**:
+      ```http
+      GET /devmode/toggle
+      ```
+
+3. **Set DevMode to a Specific Value**
+    - **Endpoint**: `/devmode/toggle/:value`
+    - **HTTP Method**: GET
+    - **Description**: Sets the `devmode` status to a specific value. The `:value` parameter should be replaced with either `true` or `false`.
+    - **Usage**:
+      ```http
+      GET /devmode/toggle/true
+      ```
+      or
+      ```http
+      GET /devmode/toggle/false
+      ```
+
+### How to toggle `devmode`?
+
+- To **check the current status**, use the `/devmode` endpoint.
+  
+- To **switch the current mode**, simply call the `/devmode/toggle` endpoint. It will invert the current setting.
+  
+- To **set a specific mode** (either `true` or `false`), use the `/devmode/toggle/:value` endpoint, replacing `:value` with your desired state.
+
+---
+
+**Important**: Always ensure that `devmode` is turned off (`false`) in production environments for security reasons.
+
+
 Router class:
 ## Function: add
 
