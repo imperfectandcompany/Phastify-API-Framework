@@ -65,6 +65,91 @@ With the implementation of a development mode (`devmode`), our RESTful Web Servi
 **Important**: Always ensure that `devmode` is turned off (`false`) in production environments for security reasons.
 
 
+### Implementation of Integrations in the RESTful Web Service
+
+Postogon API V2 has been expanded to include an `integrations` feature, designed to facilitate users in connecting and managing third-party service integrations.
+
+### What are `integrations`?
+
+`integrations` offers a framework for users to incorporate third-party services into the application. Each integration entails vital details like the service name, client ID, client secret, access tokens, and other service-specific credentials. This structured approach ensures efficient service interaction while preserving data safety and integrity.
+
+### Key Features:
+
+1. **Ownership Verification**: Before any update, the system verifies if the integration pertains to the authenticated user, solidifying security.
+2. **Data Validation**: Only predefined columns from the provided data are accepted. Any extraneous or unidentified columns are flagged, preventing potential mishaps.
+3. **Token Handling**: Although refresh tokens aren't yet operational, there are plans to integrate them for sustained and secure third-party service connections.
+
+### Endpoints:
+
+1. **Retrieve Integration Details**
+    - **Endpoint**: `/integrations/:id`
+    - **HTTP Method**: GET
+    - **Description**: Fetches integration details for the user
+    - **Usage**: 
+      ```http
+      GET /integrations
+      ```
+
+2. **Create a New Integration**
+    - **Endpoint**: `/integrations`
+    - **HTTP Method**: POST
+    - **Description**: Adds a new integration to the user's account.
+    - **Usage**:
+      ```http
+      POST /integrations
+      ```
+      Body:
+      ```json
+      {
+          "service": "ServiceName",
+          "client_id": "ClientID",
+          ...
+      }
+      ```
+
+3. **Update Integration by ID**
+    - **Endpoint**: `/integrations/:id`
+    - **HTTP Method**: PUT
+    - **Description**: Updates an integration's details using the provided ID and data. Verifies ownership prior to allowing any update.
+    - **Usage**: 
+      ```http
+      PUT /integrations/{integration_id}
+      ```
+      Body:
+      ```json
+      {
+          "service": "UpdatedServiceName",
+          ...
+      }
+      ```
+4. ### Delete Integration by ID
+
+- **Endpoint**: `/integrations/:id`
+- **HTTP Method**: DELETE
+- **Description**: Removes an existing integration from the user's account based on the provided ID. The system ensures that only the owner of the integration (or an authorized user) can delete it to maintain data integrity and security.
+- **Usage**: 
+  ```http
+  DELETE /integrations/{integration_id}
+  ```
+With this `DELETE` endpoint, users can efficiently manage their integrations, ensuring that obsolete or redundant connections are promptly removed from their accounts.
+
+---
+
+
+### Future Plans:
+
+- **Refresh Token Integration**: Plans are in the pipeline to integrate refresh tokens, ensuring continued access to third-party services without frequent reauthentication. 
+- **Support for Specific Services**: In the near future, we aim to have a predefined list of supported third-party services with preset URLs, simplifying user experience and reducing error margins.
+
+**Retrieve Specific Integration Details (WIP) **
+    - **Endpoint**: `/integrations/:id`
+    - **HTTP Method**: GET
+    - **Description**: Fetches integration details based on the provided ID. 
+    - **Usage**: 
+      ```http
+      GET /integrations/{integration_id}
+      ```
+
 Router class:
 ## Function: add
 
