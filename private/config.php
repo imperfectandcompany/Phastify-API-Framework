@@ -3,9 +3,9 @@
 //Global config variables
 $GLOBALS['config']['url'] = "https://postogon.com";
 $GLOBALS['config']['avatar_url'] = "https://cdn.postogon.com/assets/img/profile_pictures";
+$GLOBALS['config']['avatar_folder'] = "/usr/www/igfastdl/postogon-cdn/assets/img/profile_pictures";
 $GLOBALS['config']['private_folder'] = "/usr/www/igfastdl/postogon-api/private";
 $GLOBALS['config']['timezone'] = "America/New_York";
-
 //If the site is not in a root folder, how many values in the url_loc array will we be ignoring so we think we're in a root folder?
 $GLOBALS['config']['url_offset'] = 0;
 
@@ -26,6 +26,7 @@ $GLOBALS['config']['devmode'] = 1; //This enables dev mode to print out dev info
 $GLOBALS['config']['max_username_length'] = '32';
 $GLOBALS['config']['max_password_length'] = '32';
 $GLOBALS['config']['max_timeline_lookup'] = '30';
+$GLOBALS['config']['avatar_max_size'] = '156';
 $GLOBALS['config']['default_avatar'] = 'default.png';
 
 //Group settings

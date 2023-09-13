@@ -60,7 +60,7 @@ if ($result['status'] === 'error') {
     $notAuthenticatedRouter = new Router();
     
     // add the non-authenticated routes to the router
-    $notAuthenticatedRouter->add('/register', 'UserController@register', 'GET');
+    $notAuthenticatedRouter->add('/register', 'UserController@register', 'POST');
     $notAuthenticatedRouter->add('/auth', 'UserController@authenticate', 'POST');
     $notAuthenticatedRouter->add('/devmode', 'DevmodeController@getDevMode', 'GET');
     $notAuthenticatedRouter->add('/devmode/toggle', 'DevmodeController@toggleDevMode', 'GET');
@@ -103,6 +103,10 @@ $router->add('/devmode', 'DevmodeController@getDevMode', 'GET');
 $router->add('/devmode/toggle', 'DevmodeController@toggleDevMode', 'GET');
 //$router->add('/devmode/toggle/:value', 'DevmodeController@toggleDevModeValue', 'GET');
 $router->add('/devmode/toggle/:value', 'DevmodeController@toggleDevModeValue', 'GET');
+
+
+$router->add('/settings/adjustAvatar', 'SettingsController@adjustAvatar', 'POST');
+
 
 
 // Return a list of all integrations for the authenticated user 
