@@ -50,8 +50,8 @@ class Settings {
     }
     
     public function updateAvatar($filter_params)
-    {
-        $this->dbObject->updateData($GLOBALS['db_conf']['db_db'].".users", "avatar = ?, avatar_ts = UNIX_TIMESTAMP() WHERE id = ?", $filter_params);
-        return true;
+    {   
+        //include avatar_ts = UNIX_TIMESTAMP() in the future
+        return $this->dbObject->updateData("users", "avatar = ?", "id = ?", $filter_params);
     }
 }

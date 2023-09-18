@@ -9,7 +9,7 @@ include($GLOBALS['config']['private_folder'].'/constants.php');
 // include the necessary files and create a database connection object
 require_once $GLOBALS['config']['private_folder'].'/classes/class.database.php';
 require_once $GLOBALS['config']['private_folder'].'/classes/class.user.php';
-require_once $GLOBALS['config']['private_folder'].'/classes/class.devmode.php';
+require_once $GLOBALS['config']['private_folder'].'/classes/class.dev.php';
 
 // set timezone
 date_default_timezone_set($GLOBALS['config']['timezone']);
@@ -46,25 +46,29 @@ if (empty($token)) {
     $token = isset($_GET['token']) ? $_GET['token'] : '';
 }
 
-// get an instance of the Devmode class
-$devMode = new Devmode($dbConnection);
-$GLOBALS['config']['devmode'] = $devMode->getDevModeStatus();
-
 // authenticate the user
 $result = authenticate_user($token, $dbConnection);
+
+// get an instance of the Devmode class
+$devMode = new Dev($dbConnection);
+$GLOBALS['config']['devmode'] = $devMode->getDevModeStatus();
 
 // handle case where user is not authenticated
 if ($result['status'] === 'error') {
     
     // create a new instance for unauthenticated routes from router class
     $notAuthenticatedRouter = new Router();
-    
+
+    if($GLOBALS['config']['devmode'] == 1){
+        include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');  
+    }
+
     // add the non-authenticated routes to the router
     $notAuthenticatedRouter->add('/register', 'UserController@register', 'POST');
     $notAuthenticatedRouter->add('/auth', 'UserController@authenticate', 'POST');
-    $notAuthenticatedRouter->add('/devmode', 'DevmodeController@getDevMode', 'GET');
-    $notAuthenticatedRouter->add('/devmode/toggle', 'DevmodeController@toggleDevMode', 'GET');
-    $notAuthenticatedRouter->add('/devmode/toggle/:value', 'DevmodeController@toggleDevModeValue', 'GET');
+    $notAuthenticatedRouter->add('/devmode', 'DevController@getDevMode', 'GET');
+    $notAuthenticatedRouter->add('/devmode/toggle', 'DevController@toggleDevMode', 'GET');
+    $notAuthenticatedRouter->add('/devmode/toggle/:value', 'DevController@toggleDevModeValue', 'GET');
 
     // get all the routes that have been added to the router
     $routes = $notAuthenticatedRouter->getRoutes();
@@ -76,37 +80,36 @@ if ($result['status'] === 'error') {
         exit();
     }
     
-    if($GLOBALS['config']['devmode'] == 1){
-        include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');
-    }
     // dispatch the request to the appropriate controller
-    $notAuthenticatedRouter->dispatch($GLOBALS['url_loc'], $dbConnection);
+    $notAuthenticatedRouter->dispatch($GLOBALS['url_loc'], $dbConnection, $GLOBALS['config']['devmode']);
     exit();
 }
-
 
 // set user ID and token in global variable
 $GLOBALS['user_id'] = $result['user_id'];
 $GLOBALS['token'] = $result['token'];
 
-if($GLOBALS['config']['devmode'] == 1){
-    include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');
-}
-
-
 // if the user is authenticated, create a new instance of the Router class and dispatch the incoming request
 $router = new Router();
+
+// get an instance of the Devmode class
+$devMode = new Dev($dbConnection);
+$GLOBALS['config']['devmode'] = $devMode->getDevModeStatus();
+
+if($GLOBALS['config']['devmode'] == 1){
+    include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');  
+}
+
 $router->add('/timeline/publicTimeline', 'TimelineController@fetchPublicTimeline', 'POST');
 $router->add('/timeline/:publicTimeline', 'TimelineController@fetchPublicTimelineParamTest', 'GET');
 
-$router->add('/devmode', 'DevmodeController@getDevMode', 'GET');
-$router->add('/devmode/toggle', 'DevmodeController@toggleDevMode', 'GET');
-//$router->add('/devmode/toggle/:value', 'DevmodeController@toggleDevModeValue', 'GET');
-$router->add('/devmode/toggle/:value', 'DevmodeController@toggleDevModeValue', 'GET');
+$router->add('/devmode', 'DevController@getDevMode', 'GET');
+$router->add('/devmode/toggle', 'DevController@toggleDevMode', 'GET');
+//$router->add('/devmode/toggle/:value', 'DevController@toggleDevModeValue', 'GET');
+$router->add('/devmode/toggle/:value', 'DevController@toggleDevModeValue', 'GET');
 
 
 $router->add('/settings/adjustAvatar', 'SettingsController@adjustAvatar', 'POST');
-
 
 
 // Return a list of all integrations for the authenticated user 
@@ -155,9 +158,12 @@ $router->add('/logout/:deviceToken', 'UserController@logoutAllParam', 'GET');
 //implement next..
 $router->add('/logout/:deviceToken/:param2/:optionalParam', 'UserController@theOnewokring', 'GET');
 
+if($GLOBALS['config']['devmode'] == 1){
+    $router->add('/list-routes', 'DevController@listRoutes', 'GET');
+}
 
 //dispatch router since authentication and global variables are set!
-$router->dispatch($GLOBALS['url_loc'], $dbConnection);
+$router->dispatch($GLOBALS['url_loc'], $dbConnection, $GLOBALS['config']['devmode']);
 
 
 //// router

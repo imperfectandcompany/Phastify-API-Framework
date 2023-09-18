@@ -143,7 +143,7 @@ class Router {
     
 
 
-    public function dispatch($url, $dbConnection)
+    public function dispatch($url, $dbConnection, $devMode)
     {
         $url = implode('/', $url);
         $httpMethod = $_SERVER['REQUEST_METHOD'];
@@ -206,13 +206,18 @@ class Router {
                 }
 
                 // Call the controller method with the parameters
-                $controllerInstance = new $controller($dbConnection);
+                $controllerInstance = $controller !== 'DevController' ? new $controller($dbConnection) : new $controller($dbConnection, $this->routes);
                 $controllerInstance->{$method}(...$validatedParams);
                 $routeMatched = true; // Set the flag to true as a route was dispatched
                 return;
             }
         }
         if (!$routeMatched) {
+        // if not main page, don't return anything
+        if($url == '/'){
+            return;
+        }
+
         // If no route is found, handle the error
         $this->handleError("Route with URI '$url' not found.");
         }

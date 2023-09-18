@@ -1,6 +1,6 @@
 <?php
 
-class Devmode {
+class Dev {
     
     private $dbObject;
 
