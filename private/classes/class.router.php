@@ -6,6 +6,7 @@ class Router {
 
     public function add($uri, $controller, $requestMethod, $documentation = null)
     {
+
         // Check if the URI is valid
         if (empty($uri) || substr($uri, 0, 1) !== '/') {
             throw new Exception("Invalid route URI: '$uri'.");
@@ -107,7 +108,6 @@ class Router {
         ];
 
         $this->routes[$uri]['methods'][$requestMethod]['documentation'] = $documentation;
-
     }
 
     public function addDocumentation($uri, $requestMethod, $documentation)
@@ -116,6 +116,17 @@ class Router {
         if (isset($this->routes[$uri]['methods'][$requestMethod])) {
             // Add or update the documentation comment
             $this->routes[$uri]['methods'][$requestMethod]['documentation'] = $documentation;
+        } else {
+            throw new Exception("Route with URI '$uri' and request method '$requestMethod' does not exist.");
+        }
+    }
+
+    public function enforceParameters($uri, $requestMethod, $params = [])
+    {
+        // Check if the route exists
+        if (isset($this->routes[$uri]['methods'][$requestMethod])) {
+            // Add or update enforced parameters
+            $this->routes[$uri]['methods'][$requestMethod]['required_params'] = $params;
         } else {
             throw new Exception("Route with URI '$uri' and request method '$requestMethod' does not exist.");
         }
@@ -217,6 +228,31 @@ class Router {
                     //9-10-23 add specific error handling, missing parameter or wrong data type etc.
                     $this->handleError("Invalid parameters for route with URI '$url'.");
                     return;
+                }
+
+                foreach ($config['methods'] as $requestMethod => $methodData) {
+                    if (isset($methodData['required_params'])) {
+                        $routeParams = $methodData['required_params'];
+                        break;
+                    }
+                }
+
+                // Extract parameters from different sources (e.g., URL, body) (MOVE IN FROM 217)
+                $routeBodyParams = [];
+                foreach ($routeParams as $paramName => $source) {
+                    switch ($source) {
+                        case 'body':
+                            // Extract parameters from the request body (e.g., JSON)
+                            $postBody = json_decode(file_get_contents("php://input"));
+                            if (property_exists($postBody, $paramName)) {
+                                $routeBodyParams[$paramName] = $postBody->$paramName;
+                            } else {
+                                // Handle missing mandatory parameter in the request body
+                                $this->handleError("Missing mandatory parameter: $paramName in request body");
+                                return;
+                            }
+                        break;
+                    }
                 }
 
                 // Call the controller method with the parameters

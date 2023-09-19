@@ -137,8 +137,15 @@ $router->add('/integrations', 'IntegrationController@createIntegration', 'POST')
 $router->addDocumentation('/integrations', 'POST', 'Creates a new integration for the authenticated user.');
 
 // Update an existing integration for the authenticated user
-$router->add('/integrations/:id', 'IntegrationController@updateIntegration', 'PUT');
+$router->add('/integrations/:id', 'IntegrationController@updateIntegration', 'PUT', [
+    'service' => 'body',   // Service comes from the request body
+]);
+// Add documentation to route
 $router->addDocumentation('/integrations/:id', 'PUT', 'Updates an existing integration for the authenticated user.');
+// Require a 'service' to be present in the request body
+$router->enforceParameters('/integrations/:id', 'PUT', [
+    'service' => 'body',   // Service comes from the request body
+]);
 
 // Delete an existing integration for the authenticated user
 $router->add('/integrations/:id', 'IntegrationController@deleteIntegration', 'DELETE');

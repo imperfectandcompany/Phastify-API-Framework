@@ -43,20 +43,29 @@ class DevController {
         $html = '<html><head><title>Available Routes</title></head><body>';
         $html .= '<h1>Available Routes</h1>';
         $html .= '<table border="1">';
-        $html .= '<tr><th>URI</th><th>Parameters</th><th>Methods</th><th>Documentation</th></tr>';
+        $html .= '<tr><th>URI</th><th>Parameters</th><th>Methods</th><th>Required Parameters</th><th>Documentation</th></tr>';
     
         foreach ($routes as $uri => $routeData) {
             $parameters = implode(', ', $routeData['params']);
             $methods = implode(', ', array_keys($routeData['methods']));
     
             $documentation = '';
+            $requiredParams = '';
+    
             foreach ($routeData['methods'] as $requestMethod => $methodData) {
                 if (isset($methodData['documentation'])) {
                     $documentation .= "$requestMethod: " . $methodData['documentation'] . '<br>';
                 }
+                if (isset($methodData['required_params'])) {
+                    $requiredParamStrings = [];
+                    foreach ($methodData['required_params'] as $paramName => $source) {
+                        $requiredParamStrings[] = "{$requestMethod}->{$source}->{$paramName}";
+                    }
+                    $requiredParams .= implode(', ', $requiredParamStrings) . '<br>';
+                }
             }
     
-            $html .= "<tr><td>$uri</td><td>$parameters</td><td>$methods</td><td>$documentation</td></tr>";
+            $html .= "<tr><td>$uri</td><td>$parameters</td><td>$methods</td><td>$requiredParams</td><td>$documentation</td></tr>";
         }
     
         $html .= '</table>';
@@ -66,7 +75,8 @@ class DevController {
         echo $html;
     }
     
-
+    
+        
     public function toggleDevModeValue(string $value) {
         $devMode = new Devmode($this->dbConnection);
         if($value != null){
