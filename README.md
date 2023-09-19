@@ -10,6 +10,45 @@ Stack trace:
 #0 {main}
   thrown in <b>/usr/www/igfastdl/postogon-api/public_html/index.php</b> on line <b>59</b><br />
 
+sep18
+https://v2.api.postogon.com/list-routes
+
+## Router Class Enhancements
+
+Here's a quick overview of the new features:
+
+### Required Parameters
+
+Now, we can specify required parameters for different HTTP request methods (e.g., GET, POST, PUT) for each route. This ensures that the necessary data is present when handling requests.
+
+Example:
+```php
+// Update an existing integration for the authenticated user
+$router->enforceParameters('/integrations/:id', 'PUT', [
+    'service' => 'body',   // Service comes from the request body
+    'clientname' => 'body',   // Service comes from the request body
+]);
+```
+
+### Documentation
+We've added support for documenting our routes comprehensively. We can include documentation for each route, describing its purpose and usage.
+
+Example:
+```php
+// Add documentation to route
+$router->addDocumentation('/integrations/:id', 'PUT', 'Updates an existing integration for the authenticated user.');
+```
+
+### Enforcing Required Parameters
+To ensure that required parameters are always present, we introduced a function that enforces them for a specific route and request method. This helps maintain data integrity and ensures that our routes receive the necessary input.
+
+Example:
+```php
+// Require 'service' and 'clientname' to be present in the request body for the PUT method
+$router->enforceParameters('/integrations/:id', 'PUT', [
+    'PUT:body:service,clientname',
+]);
+```
 
 ### Introduction of DevMode
 
