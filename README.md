@@ -10,6 +10,16 @@ Stack trace:
 #0 {main}
   thrown in <b>/usr/www/igfastdl/postogon-api/public_html/index.php</b> on line <b>59</b><br />
 
+sep18
+https://v2.api.postogon.com/list-routes
+Add support for required parameters and documentation in router class
+
+- Updated the router class to allow specifying required parameters for different request methods (e.g., GET, POST, PUT) for each route.
+- Enhanced the listRoutes function to display required parameters and documentation for each route.
+- Modified the structure of required parameters in the route definition to include the request method and parameter source.
+- Added a function to enforce required parameters for a specific route and request method.
+- Improved error handling for missing mandatory parameters in the request body.
+
 
 ### Introduction of DevMode
 
