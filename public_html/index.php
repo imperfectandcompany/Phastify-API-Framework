@@ -35,8 +35,6 @@ $dbConnection = new DatabaseConnector(
     $GLOBALS['db_conf']['db_charset']
 );
 
-
-
 require_once $GLOBALS['config']['private_folder'].'/classes/class.router.php';
 
 require("./auth.php");
@@ -87,7 +85,12 @@ if ($result['status'] === 'error') {
 
 // set user ID and token in global variable
 $GLOBALS['user_id'] = $result['user_id'];
+
 $GLOBALS['token'] = $result['token'];
+$GLOBALS['logged_in'] = true;
+
+// at this point we have our user_id and can set global data
+include_once($GLOBALS['config']['private_folder'].'/data/user.php');
 
 // if the user is authenticated, create a new instance of the Router class and dispatch the incoming request
 $router = new Router();
@@ -124,6 +127,9 @@ $router->addDocumentation('/devmode/toggle/:value', 'GET', 'Toggles development 
 $router->add('/settings/adjustAvatar', 'SettingsController@adjustAvatar', 'POST');
 $router->addDocumentation('/settings/adjustAvatar', 'POST', 'Adjusts the user avatar settings.');
 
+$router->add('/profile/getAvatar/', 'ProfileController@showAvatar', 'GET');
+$router->add('/profile/getAvatar/:user_id', 'ProfileController@showAvatar', 'GET');
+
 // Return a list of all integrations for the authenticated user
 $router->add('/integrations', 'IntegrationController@getAllIntegrations', 'GET');
 $router->addDocumentation('/integrations', 'GET', 'Returns a list of all integrations for the authenticated user.');
@@ -154,8 +160,6 @@ $router->addDocumentation('/integrations/:id', 'DELETE', 'Deletes an existing in
 // Refresh the data for an integration for the authenticated user
 $router->add('/integrations/:id/refresh', 'IntegrationController@refreshIntegrationData', 'POST');
 $router->addDocumentation('/integrations/:id/refresh', 'POST', 'Refreshes the data for an integration for the authenticated user.');
-
-
 
 
 //POST /logout

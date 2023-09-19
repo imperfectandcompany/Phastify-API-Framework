@@ -56,6 +56,9 @@ if($GLOBALS['config']['url_offset'] > 0){
     $GLOBALS['url_loc'] = array_values($GLOBALS['url_loc']);
 }
 
+//When we're looking up a user's profile, we use this query to easily not accidentally call their password when we don't need it.
+$GLOBALS['config']['profile_lookup'] = "id,username,email,admin,verified,createdAt,avatar,display_name";
+
 //Do not touch -- These are settings we should define or set, but not adjust unless we absolutely need to.
 $GLOBALS['errors'] = array();
 $GLOBALS['messages'] = array(); //Main array for all status messages
