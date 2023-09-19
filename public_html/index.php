@@ -127,8 +127,11 @@ $router->addDocumentation('/devmode/toggle/:value', 'GET', 'Toggles development 
 $router->add('/settings/adjustAvatar', 'SettingsController@adjustAvatar', 'POST');
 $router->addDocumentation('/settings/adjustAvatar', 'POST', 'Adjusts the user avatar settings.');
 
-$router->add('/profile/getAvatar/', 'ProfileController@showAvatar', 'GET');
+$router->add('/profile/getAvatar', 'ProfileController@showAvatar', 'GET');
+$router->addDocumentation('/profile/getAvatar', 'GET', 'Fetches the avatar for the currently authenticated user.');
+
 $router->add('/profile/getAvatar/:user_id', 'ProfileController@showAvatar', 'GET');
+$router->addDocumentation('/profile/getAvatar/:user_id', 'GET', 'Fetches the avatar for the specified user by their user ID.');
 
 // Return a list of all integrations for the authenticated user
 $router->add('/integrations', 'IntegrationController@getAllIntegrations', 'GET');
@@ -146,12 +149,82 @@ $router->addDocumentation('/integrations', 'POST', 'Creates a new integration fo
 $router->add('/integrations/:id', 'IntegrationController@updateIntegration', 'PUT', [
     'service' => 'body',   // Service comes from the request body
 ]);
+
 // Add documentation to route
 $router->addDocumentation('/integrations/:id', 'PUT', 'Updates an existing integration for the authenticated user.');
 // Require a 'service' to be present in the request body
 $router->enforceParameters('/integrations/:id', 'PUT', [
     'service' => 'body',   // Service comes from the request body
 ]);
+
+// Create a New Post with Optional Expiration Time
+$router->add('/post', 'PostController@createPost', 'POST');
+$router->addDocumentation('/post', 'POST', 'Creates a new post with an optional expiration time.');
+$router->enforceParameters('/post', 'POST', [
+    'body' => 'body',            // Content of the post in the request body
+    'to_whom' => 'body',         // Public (1) or private (2) post in the request body
+    // 'expiration_time' => 'body' Optional expiration time in the request body
+]);
+
+// Delete a post
+$router->add('/post/:id', 'PostController@deletePost', 'DELETE');
+$router->addDocumentation('/post/:id', 'DELETE', 'Deletes a post.');
+
+// Update a Post with Optional Expiration Time
+$router->add('/post/:id', 'PostController@updatePost', 'PUT');
+$router->addDocumentation('/post/:id', 'PUT', 'Updates an existing post with an optional expiration time.');
+$router->enforceParameters('/post/:id', 'PUT', [
+    'body' => 'body',            // Content of the post in the request body
+    'to_whom' => 'body',         // Public (1) or private (2) post in the request body
+    // 'expiration_time' => 'body' Optional expiration time in the request body
+]);
+
+// Archive a Post by ID
+$router->add('/post/:postId/archive', 'PostController@archivePost', 'POST');
+$router->addDocumentation('/post/:postId/archive', 'POST', 'Archives a post by its ID.');
+
+// Unarchive a Post by ID
+$router->add('/post/:postId/unarchive', 'PostController@unarchivePost', 'POST');
+$router->addDocumentation('/post/:postId/unarchive', 'POST', 'Unarchives a post by its ID.');
+
+// View Archived Posts for User
+$router->add('/users/archived-posts', 'PostController@viewArchivedPosts', 'GET');
+$router->addDocumentation('/users/archived-posts', 'GET', 'Allows the user to view their archived posts.');
+
+// Retrieve a Single Post by ID
+$router->add('/post/:id', 'PostController@getSinglePost', 'GET');
+$router->addDocumentation('/post/:id', 'GET', 'Retrieves a single post by its ID.');
+
+// Retrieve Posts in a User's Public Feed
+$router->add('/posts/feed/public', 'PostController@getPublicFeedPosts', 'GET');
+$router->addDocumentation('/posts/feed/public', 'GET', 'Retrieves posts in the user\'s public feed.');
+
+// Retrieve Posts in a User's Private Feed
+$router->add('/posts/feed/private', 'PostController@getPrivateFeedPosts', 'GET');
+$router->addDocumentation('/posts/feed/private', 'GET', 'Retrieves posts in the user\'s private feed.');
+
+// Retrieve Posts in another User's Public Feed
+$router->add('/posts/feed/:userid/public', 'PostController@getPublicFeedPosts', 'GET');
+$router->addDocumentation('/posts/feed/:userid/public', 'GET', 'Retrieves posts in another user\'s public feed.');
+
+// Retrieve Posts in another User's Private Feed
+$router->add('/posts/feed/:userid/private', 'PostController@getPrivateFeedPosts', 'GET');
+$router->addDocumentation('/posts/feed/:userid/private', 'GET', 'Retrieves posts in another user\'s private feed.');
+
+// Retrieve Comments for a Post
+$router->add('/post/:id/comments', 'CommentController@getPostComments', 'GET');
+$router->addDocumentation('/post/:id/comments', 'GET', 'Retrieves comments for a specific post.');
+
+// Create a Comment on a Post
+$router->add('/post/:id/comment', 'CommentController@createPostComment', 'POST');
+$router->addDocumentation('/post/:id/comment', 'POST', 'Creates a new comment on a post.');
+$router->enforceParameters('/post/:id/comment', 'POST', [
+    'commentBody' => 'body',       // Content of the comment in the request body
+]);
+
+// Delete a comment
+$router->add('/comment/:id', 'CommentController@deleteComment', 'DELETE');
+$router->addDocumentation('/comment/:id', 'DELETE', 'Deletes a comment.');
 
 // Delete an existing integration for the authenticated user
 $router->add('/integrations/:id', 'IntegrationController@deleteIntegration', 'DELETE');
@@ -160,7 +233,6 @@ $router->addDocumentation('/integrations/:id', 'DELETE', 'Deletes an existing in
 // Refresh the data for an integration for the authenticated user
 $router->add('/integrations/:id/refresh', 'IntegrationController@refreshIntegrationData', 'POST');
 $router->addDocumentation('/integrations/:id/refresh', 'POST', 'Refreshes the data for an integration for the authenticated user.');
-
 
 //POST /logout
 //Description: Logs out the user from the current device and invalidates the token unless all_devices is passed as true, in which case, the user is logged out from all devices, and all tokens are invalidated.
