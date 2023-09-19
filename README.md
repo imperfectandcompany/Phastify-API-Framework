@@ -12,14 +12,43 @@ Stack trace:
 
 sep18
 https://v2.api.postogon.com/list-routes
-Add support for required parameters and documentation in router class
 
-- Updated the router class to allow specifying required parameters for different request methods (e.g., GET, POST, PUT) for each route.
-- Enhanced the listRoutes function to display required parameters and documentation for each route.
-- Modified the structure of required parameters in the route definition to include the request method and parameter source.
-- Added a function to enforce required parameters for a specific route and request method.
-- Improved error handling for missing mandatory parameters in the request body.
+## Router Class Enhancements
 
+Here's a quick overview of the new features:
+
+### Required Parameters
+
+Now, we can specify required parameters for different HTTP request methods (e.g., GET, POST, PUT) for each route. This ensures that the necessary data is present when handling requests.
+
+Example:
+```php
+// Update an existing integration for the authenticated user
+$router->enforceParameters('/integrations/:id', 'PUT', [
+    'service' => 'body',   // Service comes from the request body
+    'service' => 'clientname',   // Service comes from the request body
+]);
+```
+
+### Documentation
+We've added support for documenting our routes comprehensively. We can include documentation for each route, describing its purpose and usage.
+
+Example:
+```php
+// Add documentation to route
+$router->addDocumentation('/integrations/:id', 'PUT', 'Updates an existing integration for the authenticated user.');
+```
+
+### Enforcing Required Parameters
+To ensure that required parameters are always present, we introduced a function that enforces them for a specific route and request method. This helps maintain data integrity and ensures that our routes receive the necessary input.
+
+Example:
+```php
+// Require 'service' and 'clientname' to be present in the request body for the PUT method
+$router->enforceParameters('/integrations/:id', 'PUT', [
+    'PUT:body:service,clientname',
+]);
+```
 
 ### Introduction of DevMode
 
