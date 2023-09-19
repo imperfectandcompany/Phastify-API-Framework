@@ -26,7 +26,7 @@ Example:
 // Update an existing integration for the authenticated user
 $router->enforceParameters('/integrations/:id', 'PUT', [
     'service' => 'body',   // Service comes from the request body
-    'service' => 'clientname',   // Service comes from the request body
+    'clientname' => 'body',   // Service comes from the request body
 ]);
 ```
 
