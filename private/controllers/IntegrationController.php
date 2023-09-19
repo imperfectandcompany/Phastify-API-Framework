@@ -32,7 +32,6 @@
 
             $integration = $integration->getIntegrationsById($id);
 
-
             sendResponse('success', ['integration' => $integration], SUCCESS_OK);
         }
 

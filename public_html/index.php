@@ -100,35 +100,54 @@ if($GLOBALS['config']['devmode'] == 1){
     include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');  
 }
 
+// Fetch the public timeline (POST request)
 $router->add('/timeline/publicTimeline', 'TimelineController@fetchPublicTimeline', 'POST');
+$router->addDocumentation('/timeline/publicTimeline', 'POST', 'Fetches the public timeline.');
+
+// Fetch the public timeline with a parameter (GET request)
 $router->add('/timeline/:publicTimeline', 'TimelineController@fetchPublicTimelineParamTest', 'GET');
+$router->addDocumentation('/timeline/:publicTimeline', 'GET', 'Fetches the public timeline with a parameter.');
 
+// Get the development mode page (GET request)
 $router->add('/devmode', 'DevController@getDevMode', 'GET');
+$router->addDocumentation('/devmode', 'GET', 'Gets the development mode status.');
+
+// Toggle development mode (GET request)
 $router->add('/devmode/toggle', 'DevController@toggleDevMode', 'GET');
-//$router->add('/devmode/toggle/:value', 'DevController@toggleDevModeValue', 'GET');
+$router->addDocumentation('/devmode/toggle', 'GET', 'Toggles development mode.');
+
+// Toggle development mode with a value (GET request)
 $router->add('/devmode/toggle/:value', 'DevController@toggleDevModeValue', 'GET');
+$router->addDocumentation('/devmode/toggle/:value', 'GET', 'Toggles development mode with a specific value.');
 
-
+// Adjust user avatar (POST request)
 $router->add('/settings/adjustAvatar', 'SettingsController@adjustAvatar', 'POST');
+$router->addDocumentation('/settings/adjustAvatar', 'POST', 'Adjusts the user avatar settings.');
 
-
-// Return a list of all integrations for the authenticated user 
+// Return a list of all integrations for the authenticated user
 $router->add('/integrations', 'IntegrationController@getAllIntegrations', 'GET');
+$router->addDocumentation('/integrations', 'GET', 'Returns a list of all integrations for the authenticated user.');
 
-// Returns a integration details based on the provided ID
+// Returns integration details based on the provided ID
 $router->add('/integrations/:id', 'IntegrationController@getIntegration', 'GET');
+$router->addDocumentation('/integrations/:id', 'GET', 'Returns integration details based on the provided ID.');
 
 // Create a new integration for the authenticated user
 $router->add('/integrations', 'IntegrationController@createIntegration', 'POST');
+$router->addDocumentation('/integrations', 'POST', 'Creates a new integration for the authenticated user.');
 
 // Update an existing integration for the authenticated user
 $router->add('/integrations/:id', 'IntegrationController@updateIntegration', 'PUT');
+$router->addDocumentation('/integrations/:id', 'PUT', 'Updates an existing integration for the authenticated user.');
 
 // Delete an existing integration for the authenticated user
 $router->add('/integrations/:id', 'IntegrationController@deleteIntegration', 'DELETE');
+$router->addDocumentation('/integrations/:id', 'DELETE', 'Deletes an existing integration for the authenticated user.');
 
 // Refresh the data for an integration for the authenticated user
 $router->add('/integrations/:id/refresh', 'IntegrationController@refreshIntegrationData', 'POST');
+$router->addDocumentation('/integrations/:id/refresh', 'POST', 'Refreshes the data for an integration for the authenticated user.');
+
 
 
 

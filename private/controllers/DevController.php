@@ -35,29 +35,37 @@ class DevController {
             echo '404 - Not Found';
             return;
         }
-
+        
         // Get the list of routes from the router.
         $routes = $this->router;
-
+    
         // Start building the HTML content.
         $html = '<html><head><title>Available Routes</title></head><body>';
         $html .= '<h1>Available Routes</h1>';
         $html .= '<table border="1">';
-        $html .= '<tr><th>URI</th><th>Parameters</th><th>Methods</th></tr>';
-
+        $html .= '<tr><th>URI</th><th>Parameters</th><th>Methods</th><th>Documentation</th></tr>';
+    
         foreach ($routes as $uri => $routeData) {
             $parameters = implode(', ', $routeData['params']);
             $methods = implode(', ', array_keys($routeData['methods']));
-            $html .= "<tr><td>$uri</td><td>$parameters</td><td>$methods</td></tr>";
+    
+            $documentation = '';
+            foreach ($routeData['methods'] as $requestMethod => $methodData) {
+                if (isset($methodData['documentation'])) {
+                    $documentation .= "$requestMethod: " . $methodData['documentation'] . '<br>';
+                }
+            }
+    
+            $html .= "<tr><td>$uri</td><td>$parameters</td><td>$methods</td><td>$documentation</td></tr>";
         }
-
+    
         $html .= '</table>';
         $html .= '</body></html>';
-
+    
         // Output the HTML page.
         echo $html;
-
     }
+    
 
     public function toggleDevModeValue(string $value) {
         $devMode = new Devmode($this->dbConnection);

@@ -4,7 +4,7 @@ class Router {
     
     protected $routes = [];
 
-    public function add($uri, $controller, $requestMethod)
+    public function add($uri, $controller, $requestMethod, $documentation = null)
     {
         // Check if the URI is valid
         if (empty($uri) || substr($uri, 0, 1) !== '/') {
@@ -106,7 +106,21 @@ class Router {
             'controller' => $controller,
         ];
 
+        $this->routes[$uri]['methods'][$requestMethod]['documentation'] = $documentation;
+
     }
+
+    public function addDocumentation($uri, $requestMethod, $documentation)
+    {
+        // Check if the route exists
+        if (isset($this->routes[$uri]['methods'][$requestMethod])) {
+            // Add or update the documentation comment
+            $this->routes[$uri]['methods'][$requestMethod]['documentation'] = $documentation;
+        } else {
+            throw new Exception("Route with URI '$uri' and request method '$requestMethod' does not exist.");
+        }
+    }
+
 
     public function getRoutes() {
         return $this->routes;
