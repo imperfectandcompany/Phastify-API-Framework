@@ -75,20 +75,46 @@
                 return;
             }
 
-            if ($postOwner === $userId && !$this->post->isPostArchived($postId)) {
-                if ($this->post->archivePost($postId)) {
-                    sendResponse('success', ['message' => 'Post archived'], SUCCESS_OK);
+            if ($postOwner === $userId) {
+                if(!$this->post->isPostArchived($postId)){
+                    if ($this->post->archivePost($postId)) {
+                        sendResponse('success', ['message' => 'Post archived'], SUCCESS_OK);
+                    } else {
+                        sendResponse('warning', ['message' => 'Unable to archive post'], ERROR_INTERNAL_SERVER);
+                    }
                 } else {
-                    sendResponse('error', ['message' => 'Unable to archive post'], ERROR_INTERNAL_SERVER);
+                    sendResponse('error', ['message' => 'Post already archived'], ERROR_BAD_REQUEST);
                 }
             } else {
+                throwWarning("Owner of post is not the same as the current user trying to archive the post");
                 sendResponse('error', ['message' => 'Unauthorized to archive this post'], ERROR_FORBIDDEN);
             }
         }
 
         // Unarchive a Post by ID
         public function unarchivePost(int $postId) {
-            // implementation here
+            $userId = $GLOBALS['user_id'];
+            $postOwner = $this->post->getPostOwner($postId);
+
+            if ($postOwner === false) {
+                sendResponse('error', ['message' => 'Post not found'], ERROR_NOT_FOUND);
+                return;
+            }
+
+            if ($postOwner === $userId) {
+                if($this->post->isPostArchived($postId)){
+                    if ($this->post->unArchivePost($postId)) {
+                        sendResponse('success', ['message' => 'Post unarchived'], SUCCESS_OK);
+                    } else {
+                        sendResponse('warning', ['message' => 'Unable to unarchive post'], ERROR_INTERNAL_SERVER);
+                    }
+                } else {
+                    sendResponse('error', ['message' => 'Post originally not archived'], ERROR_BAD_REQUEST);
+                }
+            } else {
+                throwWarning("Owner of post is not the same as the current user trying to unarchive the post");
+                sendResponse('error', ['message' => 'Unauthorized to unarchive this post'], ERROR_FORBIDDEN);
+            }
         }
 
         // View archived post for user

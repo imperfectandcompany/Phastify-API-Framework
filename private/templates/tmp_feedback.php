@@ -1,5 +1,4 @@
-Type of error:
-<?php echo $f_type; ?>
+Type of status:
 
 <?php if($f_header): ?>
     <b><?php echo htmlspecialchars($f_header, ENT_QUOTES); ?></b><br/>

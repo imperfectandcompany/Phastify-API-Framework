@@ -13,7 +13,6 @@
 function display_feedback($messages = null)
 {
     if(is_null($messages)){ $messages = $GLOBALS['messages']; }
-    if(isset($_SESSION['messages'])){ $messages = array_merge_recursive($messages, $_SESSION['messages']); unset($_SESSION['messages']); }
     foreach($messages as $key => $value)
     {
         if(count($value) > 0)
@@ -25,20 +24,59 @@ function display_feedback($messages = null)
                     extract(array("f_type" => "danger", "f_header" => "Error"));
                 break;
                 case"warning":
-                    extract(array("f_type" => "warning", "f_header" => "Note"));
+                    extract(array("f_type" => "warning", "f_header" => "Warning"));
                 break;
                 case"success":
                     extract(array("f_type" => "success", "f_header" => "Success"));
                 break;
             }
             extract(array("feedback" => $messages[$key]));
-            require $GLOBALS['config']['private_folder']."/templates/tmp_feedback.php";
+            require($GLOBALS['config']['private_folder'].'/templates/tmp_feedback.php');
         }
     }
 }
 
+function trimSlash($file){
+    // Split the path into segments
+    $segments = explode('/', $file);
+
+    // Get the last two segments
+    $lastTwoSegments = array_slice($segments, -2);
+
+    // Combine the last two segments back into a path
+    $trimmedPath = '/' . implode('/', $lastTwoSegments);
+    return $trimmedPath;
+}
+
+function throwWarning($message){
+    $bt = debug_backtrace();
+    $caller = array_shift($bt);
+    $file = $caller['file'];
+    $line =  $caller['line'];
+    $message = $message . " - Thrown in file " . trimSlash($file) . " on line " . $line;
+    $GLOBALS['messages']["warning"][] = $message;
+}
+function throwError($message){
+    $bt = debug_backtrace();
+    $caller = array_shift($bt);
+    $file = $caller['file'];
+    $line =  $caller['line'];
+    $message = $message . " - Thrown in file " . trimSlash($file) . " on line " . $line;
+    $GLOBALS['messages']["error"][] = $message;
+}
+
+function throwSuccess($message){
+    $bt = debug_backtrace();
+    $caller = array_shift($bt);
+    $file = $caller['file'];
+    $line =  $caller['line'];
+    $message = $message . " - Thrown in file " . trimSlash($file) . " on line " . $line;
+    $GLOBALS['messages']["success"][] = $message;
+}
+
 function sendResponse($status, $data, $httpCode) {
     echo json_encode(['status' => $status] + $data);
+    $GLOBALS['messages'][$status][] = $data['message'];
     http_response_code($httpCode);
 }
 

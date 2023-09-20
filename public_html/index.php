@@ -1,5 +1,17 @@
 <?php
 include '../private/config.php';
+// set timezone
+date_default_timezone_set($GLOBALS['config']['timezone']);
+// start output buffering
+if(!ob_start("ob_gzhandler")) ob_start();
+// start session
+session_start();
+
+// set error reporting level
+error_reporting(E_ERROR | E_WARNING | E_PARSE);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+
 // includes
 include($GLOBALS['config']['private_folder'].'/functions/functions.general.php');
 include($GLOBALS['config']['private_folder'].'/functions/functions.json.php');
@@ -10,20 +22,6 @@ include($GLOBALS['config']['private_folder'].'/constants.php');
 require_once $GLOBALS['config']['private_folder'].'/classes/class.database.php';
 require_once $GLOBALS['config']['private_folder'].'/classes/class.user.php';
 require_once $GLOBALS['config']['private_folder'].'/classes/class.dev.php';
-
-// set timezone
-date_default_timezone_set($GLOBALS['config']['timezone']);
-
-// start output buffering
-if(!ob_start("ob_gzhandler")) ob_start();
-
-// start session
-session_start();
-
-// set error reporting level
-error_reporting(E_ERROR | E_WARNING | E_PARSE);
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
 
 // set up database connection
 $dbConnection = new DatabaseConnector(
@@ -99,9 +97,7 @@ $router = new Router();
 $devMode = new Dev($dbConnection);
 $GLOBALS['config']['devmode'] = $devMode->getDevModeStatus();
 
-if($GLOBALS['config']['devmode'] == 1){
-    include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');  
-}
+
 
 // Fetch the public timeline (POST request)
 $router->add('/timeline/publicTimeline', 'TimelineController@fetchPublicTimeline', 'POST');
@@ -280,7 +276,9 @@ $router->dispatch($GLOBALS['url_loc'], $dbConnection, $GLOBALS['config']['devmod
 //    default:
 //        break;
 //}
-
+if($GLOBALS['config']['devmode'] == 1){
+    include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');  
+}
 
 // unset token to prevent accidental use
 unset($token);
