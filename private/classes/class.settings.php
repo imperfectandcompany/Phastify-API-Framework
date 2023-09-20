@@ -49,6 +49,12 @@ class Settings {
         imagedestroy($tmp);
     }
     
+    /**
+     * Update user's avatar.
+     *
+     * @param array $filter_params The filter parameters for the update.
+     * @return bool True on success, false on failure.
+     */
     public function updateAvatar($filter_params)
     {   
         //include avatar_ts = UNIX_TIMESTAMP() in the future

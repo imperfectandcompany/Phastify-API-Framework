@@ -13,18 +13,26 @@ class Security {
         $this->user = $this->dbConnection->viewSingleData($GLOBALS['db_conf']['db_db'].".users", "*", $query, $filter_params);
     }
     
+    /**
+     * Check if a user is a contact of another user.
+     *
+     * @param int $userid The ID of the user.
+     * @param int $contactId The ID of the contact.
+     * @return bool True if the user is a contact, false otherwise.
+     */
     public function checkContact(int $userid, int $contactId) {
         $paramValues = makeFilterParams(array($userid, $contactId));
         $query = "WHERE id = ? AND contact_id = ?";
-        if($userid == $contactId){
+        
+        // If the user ID matches the contact ID, they are considered a contact.
+        if ($userid == $contactId) {
             return true;
         }
-        if ($this->dbConnection->viewSingleData('contacts', '*', $query, $paramValues)['result'])
-        {
+        
+        // Check if a record exists in the 'contacts' table with the specified IDs.
+        if ($this->dbConnection->viewSingleData('contacts', '*', $query, $paramValues)['result']) {
             return true;
-        }
-        else
-        {
+        } else {
             return false;
         }
     }

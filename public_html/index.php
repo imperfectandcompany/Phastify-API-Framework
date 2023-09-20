@@ -167,12 +167,13 @@ $router->enforceParameters('/post', 'POST', [
 ]);
 
 // Retrieve a Single Post by ID
-$router->add('/post/:id', 'PostController@getSinglePost', 'GET');
-$router->addDocumentation('/post/:id', 'GET', 'Retrieves a single post by its ID.');
+$router->add('/post/:postId', 'PostController@getSinglePost', 'GET');
+$router->addDocumentation('/post/:postId', 'GET', 'Retrieves a single post by its Post ID.');
 
 // Delete a post
 $router->add('/post/:id', 'PostController@deletePost', 'DELETE');
 $router->addDocumentation('/post/:id', 'DELETE', 'Deletes a post.');
+
 
 // Update a Post with Optional Expiration Time
 $router->add('/post/:id', 'PostController@updatePost', 'PUT');

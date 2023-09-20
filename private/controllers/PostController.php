@@ -6,13 +6,15 @@
     class PostController {
         
         protected $dbConnection;
-
+        protected $post;
+        protected $security;
+        
         public function __construct($dbConnection)
         {
             $this->dbConnection = $dbConnection;
             $post = new Post($this->dbConnection);
-            $this->post = $post;
             $security = new Security($this->dbConnection);
+            $this->post = $post;
             $this->security = $security;
         }
 
@@ -76,11 +78,39 @@
             // implementation here
         }
 
-        // Retrieve a Single Post by ID
-        public function getSinglePost(int $id) {
-echo $id;
-return;
+    /**
+     * Retrieves a single post by its ID.
+     *
+     * @param int $postId The ID of the post to retrieve.
+     * @return void
+     */
+    public function getSinglePost(int $postId)
+    {
+        $userId = $GLOBALS['user_id'];
+        $postOwner = $this->post->getPostOwner($postId);
+        $toWhom = $this->post->getToWhom($postId);
+
+        if ($postOwner === false) {
+            sendResponse('error', ['message' => 'Post not found'], ERROR_NOT_FOUND);
+            return;
         }
+
+        if ($postOwner === $userId || $toWhom === TO_WHOM_PUBLIC) {
+            $post = $this->post->getPost($postId, $userId);
+            if ($post) {
+                sendResponse('success', $post, SUCCESS_OK);
+                return;
+            }
+        } elseif ($toWhom === TO_WHOM_PRIVATE && $this->security->checkContact($userId, $postOwner)) {
+            $post = $this->post->getPost($postId);
+            if ($post) {
+                sendResponse('success', $post, SUCCESS_OK);
+                return;
+            }
+        }
+
+        sendResponse('error', ['message' => 'Unauthorized to view this post'], ERROR_FORBIDDEN);
+    }
 
         // Retrieve Posts in a User's Public Feed
         public function getPublicFeedPosts(int $userid = null) {

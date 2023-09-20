@@ -26,34 +26,84 @@ class Post {
 
     }
 
-    // function to see the to_whom of a given post id
+    /**
+     * Get the 'to_whom' value of a given post ID.
+     *
+     * @param int $post_id The ID of the post.
+     * @return int|false The 'to_whom' value or false if not found.
+     */
     public function getToWhom($post_id) {
         $query = 'WHERE id = ?';
         $table = "posts";
         $select = 'to_whom';
         $paramValues = array($post_id);
         $filter_params = makeFilterParams($paramValues);
-        $result = $this->dbConnection->viewSingleData($table, $select, $query, $filter_params)['result']['to_whom'];
+        $result = $this->dbConnection->viewSingleData($table, $select, $query, $filter_params)['result'];
+        if ($result && isset($result['to_whom'])) {
+            return (int)$result['to_whom'];
+        } else {
+            return false;
+        }
+    }
+    
+    /**
+     * Get the owner of a given post ID.
+     *
+     * @param int $post_id The ID of the post.
+     * @return int|false The user ID of the post owner or false if not found.
+     */
+    public function getPostOwner($post_id) {
+        $query = 'WHERE id = ?';
+        $table = "posts";
+        $select = 'user_id';
+        $paramValues = array($post_id);
+        $filter_params = makeFilterParams($paramValues);
+        $result = $this->dbConnection->viewSingleData($table, $select, $query, $filter_params)['result'];
+        if ($result && isset($result['user_id'])) {
+            return (int)$result['user_id'];
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Get a post by its ID.
+     *
+     * @param int $postId The ID of the post to retrieve.
+     * @param int|null $userid The user ID if specified.
+     * @return array|null The post data or null if not found.
+     */
+    public function getPost(int $postId, int $userid = null) {
+        $query = 'WHERE id = ?';
+        $select = 'id, body, to_whom, user_id, expire_time, posted_on, last_edited, likes';
+        $paramValues = array($postId);
+        $filter_params = null;
+        // If we're viewing our own post, show the original content, flagged_content, and to_whom_original
+        if ($userid === $GLOBALS['user_id']) {
+            $select .= ', original_content, flagged_content, to_whom_original';
+        }
+        $filter_params = makeFilterParams($paramValues);
+        $result = $this->dbConnection->viewSingleData("posts", $select, $query, $filter_params)['result'];
         return $result;
     }
 
+    /**
+     * Get posts for a user by 'to_whom' value.
+     *
+     * @param int $userid The user ID.
+     * @param int $to_whom The 'to_whom' value.
+     * @return array|null The posts data or null if not found.
+     */
     public function getPosts(int $userid, int $to_whom) {
-        // Check if we passed a specific user ID before showing users' feed
-            $query = 'WHERE to_whom = 1 AND user_id = ?';
-            $select = 'id, body, to_whom, user_id, expire_time, posted_on, last_edited, likes';
-            $paramValues = array($userid);
-            // If we're viewing our own feed, show the original content, flagged_content, and to_whom_original
-            if($userid == $GLOBALS['user_id']){
-                $select .= ', original_content, flagged_content, to_whom_original';
-            }
-            $filter_params = makeFilterParams($paramValues);
-            $result = $this->dbConnection->viewData("posts", $select, $query, $filter_params);
-            return $result;
-    }
-
-    public function updateAvatar($filter_params)
-    {   
-        //include avatar_ts = UNIX_TIMESTAMP() in the future
-        return $this->dbObject->updateData("users", "avatar = ?", "id = ?", $filter_params);
+        $query = 'WHERE to_whom = ? AND user_id = ?';
+        $select = 'id, body, to_whom, user_id, expire_time, posted_on, last_edited, likes';
+        $paramValues = array($to_whom, $userid);
+        // If we're viewing our own feed, show the original content, flagged_content, and to_whom_original
+        if ($userid === $GLOBALS['user_id']) {
+            $select .= ', original_content, flagged_content, to_whom_original';
+        }
+        $filter_params = makeFilterParams($paramValues);
+        $result = $this->dbConnection->viewData("posts", $select, $query, $filter_params);
+        return $result;
     }
 }
