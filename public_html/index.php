@@ -166,6 +166,10 @@ $router->enforceParameters('/post', 'POST', [
     // 'expiration_time' => 'body' Optional expiration time in the request body
 ]);
 
+// Retrieve a Single Post by ID
+$router->add('/post/:id', 'PostController@getSinglePost', 'GET');
+$router->addDocumentation('/post/:id', 'GET', 'Retrieves a single post by its ID.');
+
 // Delete a post
 $router->add('/post/:id', 'PostController@deletePost', 'DELETE');
 $router->addDocumentation('/post/:id', 'DELETE', 'Deletes a post.');
@@ -191,15 +195,11 @@ $router->addDocumentation('/post/:postId/unarchive', 'POST', 'Unarchives a post 
 $router->add('/users/archived-posts', 'PostController@viewArchivedPosts', 'GET');
 $router->addDocumentation('/users/archived-posts', 'GET', 'Allows the user to view their archived posts.');
 
-// Retrieve a Single Post by ID
-$router->add('/post/:id', 'PostController@getSinglePost', 'GET');
-$router->addDocumentation('/post/:id', 'GET', 'Retrieves a single post by its ID.');
-
 // Retrieve Posts in a User's Public Feed
 $router->add('/posts/feed/public', 'PostController@getPublicFeedPosts', 'GET');
 $router->addDocumentation('/posts/feed/public', 'GET', 'Retrieves posts in the user\'s public feed.');
 
-// Retrieve Posts in a User's Private Feed
+// Retrieve Posts in Current User's Private Feed
 $router->add('/posts/feed/private', 'PostController@getPrivateFeedPosts', 'GET');
 $router->addDocumentation('/posts/feed/private', 'GET', 'Retrieves posts in the user\'s private feed.');
 

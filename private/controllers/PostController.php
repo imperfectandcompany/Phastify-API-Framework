@@ -1,4 +1,7 @@
 <?php
+    include_once($GLOBALS['config']['private_folder'].'/classes/class.post.php');
+    include_once($GLOBALS['config']['private_folder'].'/classes/class.security.php');
+    
 
     class PostController {
         
@@ -7,21 +10,45 @@
         public function __construct($dbConnection)
         {
             $this->dbConnection = $dbConnection;
+            $post = new Post($this->dbConnection);
+            $this->post = $post;
+            $security = new Security($this->dbConnection);
+            $this->security = $security;
         }
 
+        /**
+         * Create a new post or update an existing post.
+         *
+         * @return Response
+         */
         public function createPost() {
             $postBody = json_decode(file_get_contents("php://input"));
-        
-            // Extract data from the request body
-            $postContent = $postBody->body;
-            $toWhom = $postBody->to_whom;
-            $expirationTime = isset($postBody->expiration_time) ? $postBody->expiration_time : null;
-        
-            // Insert the post into the database, including the expiration time
-            // Use $expirationTime when inserting into the 'expiration_time' column
-            // DB Insert
 
-            // Return a success response
+            $postId = isset($postBody->postId) ? $postBody->postId : null;
+
+            // Extract data from the request body
+            $content = $postBody->content;
+            $originalContent = isset($postBody->original_content) ? $postBody->original_content : $content;
+            $toWhom = $postBody->to_whom;
+            $flaggedContent = isset($postBody->flagged_content) ? $postBody->flagged_content : null;
+            $toWhomOriginal = isset($postBody->to_whom_original) ? $postBody->to_whom_original : null;
+            $expirationTime = isset($postBody->expiration_time) ? $postBody->expiration_time : null;
+            $postedOn = isset($postBody->posted_on) ? $postBody->posted_on : time();
+            $lastEdited = isset($postBody->last_edited) ? $postBody->last_edited : time();
+            $likes = isset($postBody->likes) ? $postBody->likes : 0;
+
+            // Insert or update the post in the database based on the presence of postId
+            if ($postId !== null) {
+                // Update the existing post
+                // Use $postId to identify the post to update
+                // Update content, to_whom, expiration_time, last_edited, and likes
+            } else {
+                // Create a new post
+                // Insert a new row in the posts table with the provided data
+            }
+
+            // Return the newly created or updated post object
+            // Include post ID, posted_on, last_edited, and other relevant data
         }
 
         // Delete a post
@@ -51,17 +78,45 @@
 
         // Retrieve a Single Post by ID
         public function getSinglePost(int $id) {
-            // implementation here
+echo $id;
+return;
         }
 
         // Retrieve Posts in a User's Public Feed
         public function getPublicFeedPosts(int $userid = null) {
-            // implementation here
+                // Check if we passed a specific user ID before showing users' public feed
+                if ($userid == null) {
+                    $userid = $GLOBALS['user_id'];
+                }
+                $result = $this->post->getPosts($userid, 1);
+                sendResponse('success', $result, SUCCESS_OK);
         }
 
-        // Retrieve Posts in a User's Private Feed
+        /**
+         * For displaying a private feed of either the user or a specific user.
+         *
+         * @return void
+         */
         public function getPrivateFeedPosts($userid = null) {
-            // implementation here
-        }
+                // Check if we passed a specific user ID before showing the private feed
+                if ($userid === null) {
+                    $userid = $GLOBALS['user_id'];
+                } else {
+                    // Check if the private feed we are trying to view belongs to the user
+                    if ($userid !== $GLOBALS['user_id']) {
+                        // Check to see if the user is a contact of the user whose private feed they are trying to view
+                        if(!$this->security->checkContact($GLOBALS['user_id'], $userid)){
+                            sendResponse('error', ['message' => 'Unauthorized to view this private feed'], ERROR_FORBIDDEN);
+                            return;
+                        }  
+                    } else {$userid = $GLOBALS['user_id'];}
+                }
+
+                $result = $this->post->getPosts($userid, 2);
+                sendResponse('success', $result, SUCCESS_OK);
+                return;
     }
+
+
+}
 ?>

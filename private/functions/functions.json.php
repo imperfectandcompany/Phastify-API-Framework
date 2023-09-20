@@ -56,3 +56,14 @@ function json_response($data, $status = 200, $limit = 5)
 
     exit();
 }
+
+function parse($text)
+{
+    // Damn pesky carriage returns...
+    $text = str_replace("\r\n", "\n", $text);
+    $text = str_replace("\r", "\n", $text);
+
+    // JSON requires new line characters be escaped
+    $text = str_replace("\n", "\\n", $text);
+    return $text;
+}

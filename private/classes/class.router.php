@@ -231,7 +231,7 @@ class Router {
                 }
 
                 foreach ($config['methods'] as $requestMethod => $methodData) {
-                    if (isset($methodData['required_params'])) {
+                    if (isset($methodData['required_params']) && $requestMethod === $httpMethod) {
                         $routeParams = $methodData['required_params'];
                         break;
                     }
@@ -239,19 +239,25 @@ class Router {
 
                 // Extract parameters from different sources (e.g., URL, body) (MOVE IN FROM 217)
                 $routeBodyParams = [];
-                foreach ($routeParams as $paramName => $source) {
-                    switch ($source) {
-                        case 'body':
-                            // Extract parameters from the request body (e.g., JSON)
-                            $postBody = json_decode(file_get_contents("php://input"));
-                            if (property_exists($postBody, $paramName)) {
-                                $routeBodyParams[$paramName] = $postBody->$paramName;
-                            } else {
-                                // Handle missing mandatory parameter in the request body
-                                $this->handleError("Missing mandatory parameter: $paramName in request body");
-                                return;
-                            }
-                        break;
+
+                // Check if the request method matches the current method being processed
+                if ($requestMethod === $httpMethod) {
+                    // Extract parameters from different sources (e.g., URL, body)
+                    $routeBodyParams = [];
+                    foreach ($routeParams as $paramName => $source) {
+                        switch ($source) {
+                            case 'body':
+                                // Extract parameters from the request body (e.g., JSON)
+                                $postBody = json_decode(file_get_contents("php://input"));
+                                if (property_exists($postBody, $paramName)) {
+                                    $routeBodyParams[$paramName] = $postBody->$paramName;
+                                } else {
+                                    // Handle missing mandatory parameter in the request body
+                                    $this->handleError("Missing mandatory parameter: $paramName in request body");
+                                    return;
+                                }
+                                break;
+                        }
                     }
                 }
 
