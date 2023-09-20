@@ -7,10 +7,10 @@ class Security {
     public function __construct($dbConnection)
     {
         $this->dbConnection = $dbConnection;
-        $filter_params = array();
-        $filter_params[] = array("value" => $GLOBALS['user_id'], "type" => PDO::PARAM_INT);
-        $query = "WHERE id = ?";
-        $this->user = $this->dbConnection->viewSingleData($GLOBALS['db_conf']['db_db'].".users", "*", $query, $filter_params);
+        // $filter_params = array();
+        // $filter_params[] = array("value" => $GLOBALS['user_id'], "type" => PDO::PARAM_INT);
+        // $query = "WHERE id = ?";
+        // $this->user = $this->dbConnection->viewSingleData($GLOBALS['db_conf']['db_db'].".users", "*", $query, $filter_params);
     }
     
     /**

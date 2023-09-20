@@ -189,10 +189,29 @@ class DatabaseConnector {
         return $this->runQuery("insert", 'INSERT INTO ' . $table . ' (' . $rows . ') VALUES (' . $values . ') ON DUPLICATE KEY UPDATE ' . $update_values, $filter_params);
         /*INSERT INTO t1 (a,b,c) VALUES (1,2,3),(4,5,6)  ON DUPLICATE KEY UPDATE c=VALUES(a)+VALUES(b);*/
     }
-    public function updateData($table, $setClause, $whereClause =null, $filter_params = null) {
+    /**
+     * Update data in a table.
+     *
+     * @param string $table The name of the table to update.
+     * @param string $setClause The SET clause for the update query.
+     * @param string $whereClause The WHERE clause for the update query.
+     * @param array|null $filterParams An array of filter parameters.
+     * @return bool True if the update was successful, false otherwise.
+     */
+    public function updateData($table, $setClause, $whereClause = null, $filterParams = null) {
         $whereClause = $whereClause !== null ? ' WHERE ' . $whereClause : null;
-        $query =  'UPDATE ' . $table . ' SET ' . $setClause . $whereClause;
-        return $this->runQuery("update", $query, $filter_params);
+        $query = 'UPDATE ' . $table . ' SET ' . $setClause . $whereClause;
+        
+        try {
+            $result = $this->runQuery("update", $query, $filterParams);
+            if ($result === false) {
+                return false; // Update failed
+            } else {
+                return $result; // Update succeeded
+            }
+        } catch (Exception $e) {
+            return false; // Handle any exceptions and return false for failure
+        }
     }
     public function deleteData($table, $rows, $filter_params = null) {
         return $this->runQuery("delete", 'DELETE FROM ' . $table . ' ' . $rows, $filter_params);

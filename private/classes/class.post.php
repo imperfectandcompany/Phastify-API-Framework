@@ -9,23 +9,6 @@ class Post {
         $this->dbConnection = $dbConnection;
     }
 
-    //For showing a private timeline
-    //UserID of the person viewing it
-    //User ID of the person's timeline optional
-    public function fetchPrivateTimeline($user_id, $view_id = NULL){
-
-        //If timeline post is set to 2, it means they're for contacts only. This means that we can only see it if we're a contact of this person. We need to be mutual followers, they need to set me as a contact.
-        //if id = 3 and we are contact of this person, show.
-        $query = 'LIMIT '.$GLOBALS['config']['max_timeline_lookup'];
-        $filter_params = array();
-        $filter_params[] = array("value" => $user_id, "type" => PDO::PARAM_INT);
-        $query = "WHERE id = ?";
-
-
-        return $this->dbObject->viewData($GLOBALS['db_conf']['db_db'].".timeline", '*', $query, $filter_params);
-
-    }
-
     /**
      * Get the 'to_whom' value of a given post ID.
      *
@@ -45,7 +28,104 @@ class Post {
             return false;
         }
     }
+
+    /**
+     * Checks if a post is archived.
+     *
+     * @param int $postId The ID of the post.
+     * @return bool True if the post is archived, false otherwise.
+     */
+    public function isPostArchived(int $postId) {
+        // Fetch post information including 'to_whom', 'to_whom_original', and 'expire_time'
+        $query = 'WHERE id = ?';
+        $table = "posts";
+        $select = 'to_whom, to_whom_original, expire_time';
+        $paramValues = array($postId);
+        $filterParams = makeFilterParams($paramValues);
+        $postInfo = $this->dbConnection->viewSingleData($table, $select, $query, $filterParams)['result'];
+
+        // Check if we were able to fetch the post information
+        if ($postInfo) {
+            // Check if 'to_whom' is set to 3 (archived public) or 4 (archived private)
+            if ($postInfo['to_whom'] == 3 || $postInfo['to_whom'] == 4) {
+                // The post is archived based on 'to_whom'
+                return true;
+            } elseif ($postInfo['expire_time'] !== null && $postInfo['expire_time'] < time()) {
+                // The post has an expiration time, and it has expired
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        return false; // The post is not archived
+    }
+
+
+    /**
+     * Archives a post by changing its 'to_whom' value and setting 'expired' timestamp.
+     *
+     * @param int $postId The ID of the post to archive.
+     * @return bool True if the post is successfully archived, false otherwise.
+     */
+    public function archivePost(int $postId) {
+        // Get the current 'to_whom' value of the post
+        $currentToWhom = $this->getToWhom($postId);
+
+        // Determine the new 'to_whom' value for archived posts
+        $newToWhom = $currentToWhom == 1 ? 3 : ($currentToWhom == 2 ? 4 : $currentToWhom);
+
+        // If the 'to_whom' value is not changing (already archived), return false
+        if ($newToWhom == $currentToWhom) {
+            return false;
+        }
+
+        // Define the SQL update query components
+        $table = "posts";
+        $setClause = 'to_whom = ?, to_whom_original = ?, expired = UNIX_TIMESTAMP(), last_edited = NOW()';
+        $whereClause = 'id = ?';
+
+        // Prepare filter parameters for the query
+        $filterParams = makeFilterParams([$newToWhom, $currentToWhom, $postId]);
+
+        // Execute the update query
+        return $this->dbConnection->updateData($table, $setClause, $whereClause, $filterParams);
+    }
+
+
     
+    /**
+     * Updates the 'to_whom' value of a post.
+     *
+     * @param int $postId The ID of the post to update.
+     * @param int $toWhom The new 'to_whom' value.
+     * @return bool True if the post is successfully updated, false otherwise.
+     */
+    public function updatePostToWhom(int $postId, int $toWhom) {
+        // Get the current 'to_whom' value of the post
+        $currentToWhom = $this->getToWhom($postId);
+
+        // Determine the new 'to_whom' value
+        $newToWhom = $toWhom == 1 ? 3 : ($toWhom == 2 ? 4 : 5);
+
+        // If the 'to_whom' value is not changing, return false
+        if ($newToWhom == $currentToWhom) {
+            return false;
+        }
+
+        // Define the SQL update query components
+        $table = "posts";
+        $setClause = 'to_whom = ?, to_whom_original = ?, last_edited = NOW()';
+        $whereClause = 'id = ?';
+
+        // Prepare filter parameters for the query
+        $filterParams = makeFilterParams([$newToWhom, $currentToWhom, $postId]);
+
+        // Execute the update query
+        return $this->dbConnection->updateData($table, $setClause, $whereClause, $filterParams);
+    }
+
+
     /**
      * Get the owner of a given post ID.
      *
@@ -74,6 +154,7 @@ class Post {
      * @return array|null The post data or null if not found.
      */
     public function getPost(int $postId, int $userid = null) {
+        // TODO: OMIT ARCHIVED POSTS (TO_WHOM = 3 || TO_WHOM = 4 || EXPIRE_TIME < CURRENT_TIMESTAMP)
         $query = 'WHERE id = ?';
         $select = 'id, body, to_whom, user_id, expire_time, posted_on, last_edited, likes';
         $paramValues = array($postId);

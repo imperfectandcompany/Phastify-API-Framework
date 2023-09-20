@@ -1,13 +1,10 @@
 <?php
     include_once($GLOBALS['config']['private_folder'].'/classes/class.post.php');
     include_once($GLOBALS['config']['private_folder'].'/classes/class.security.php');
-    
 
     class PostController {
         
         protected $dbConnection;
-        protected $post;
-        protected $security;
         
         public function __construct($dbConnection)
         {
@@ -63,9 +60,30 @@
             // implementation here
         }
 
-        // Archive a Post by ID
+        /**
+         * Archives a post by its ID.
+         *
+         * @param int $postId The ID of the post to archive.
+         * @return void
+         */
         public function archivePost(int $postId) {
-            // implementation here
+            $userId = $GLOBALS['user_id'];
+            $postOwner = $this->post->getPostOwner($postId);
+
+            if ($postOwner === false) {
+                sendResponse('error', ['message' => 'Post not found'], ERROR_NOT_FOUND);
+                return;
+            }
+
+            if ($postOwner === $userId && !$this->post->isPostArchived($postId)) {
+                if ($this->post->archivePost($postId)) {
+                    sendResponse('success', ['message' => 'Post archived'], SUCCESS_OK);
+                } else {
+                    sendResponse('error', ['message' => 'Unable to archive post'], ERROR_INTERNAL_SERVER);
+                }
+            } else {
+                sendResponse('error', ['message' => 'Unauthorized to archive this post'], ERROR_FORBIDDEN);
+            }
         }
 
         // Unarchive a Post by ID
@@ -78,39 +96,51 @@
             // implementation here
         }
 
-    /**
-     * Retrieves a single post by its ID.
-     *
-     * @param int $postId The ID of the post to retrieve.
-     * @return void
-     */
-    public function getSinglePost(int $postId)
-    {
-        $userId = $GLOBALS['user_id'];
-        $postOwner = $this->post->getPostOwner($postId);
-        $toWhom = $this->post->getToWhom($postId);
+        /**
+         * Retrieves a single post by its ID.
+         *
+         * @param int $postId The ID of the post to retrieve.
+         * @return void
+         */
+        public function getSinglePost(int $postId) {
+            $userId = $GLOBALS['user_id'];
+            $postOwner = $this->post->getPostOwner($postId);
 
-        if ($postOwner === false) {
-            sendResponse('error', ['message' => 'Post not found'], ERROR_NOT_FOUND);
-            return;
-        }
-
-        if ($postOwner === $userId || $toWhom === TO_WHOM_PUBLIC) {
-            $post = $this->post->getPost($postId, $userId);
-            if ($post) {
-                sendResponse('success', $post, SUCCESS_OK);
+            if ($postOwner === false) {
+                sendResponse('error', ['message' => 'Post not found'], ERROR_NOT_FOUND);
                 return;
             }
-        } elseif ($toWhom === TO_WHOM_PRIVATE && $this->security->checkContact($userId, $postOwner)) {
-            $post = $this->post->getPost($postId);
-            if ($post) {
-                sendResponse('success', $post, SUCCESS_OK);
-                return;
+
+            if ($postOwner === $userId || $this->canViewPost($postId, $userId)) {
+                $post = $this->post->getPost($postId, $userId);
+                if ($post) {
+                    sendResponse('success', $post, SUCCESS_OK);
+                } else {
+                    sendResponse('error', ['message' => 'Post not found'], ERROR_NOT_FOUND);
+                }
+            } else {
+                sendResponse('error', ['message' => 'Unauthorized to view this post'], ERROR_FORBIDDEN);
             }
         }
 
-        sendResponse('error', ['message' => 'Unauthorized to view this post'], ERROR_FORBIDDEN);
-    }
+        /**
+         * Checks if the current user can view a post.
+         *
+         * @param int $postId The ID of the post to check.
+         * @param int $userId The ID of the user.
+         * @return bool True if the user can view the post, false otherwise.
+         */
+        private function canViewPost(int $postId, int $userId): bool {
+            $postToWhom = $this->post->getToWhom($postId);
+
+            if ($postToWhom === TO_WHOM_PUBLIC) {
+                return true; // Public post, anyone can view
+            } elseif ($postToWhom === TO_WHOM_PRIVATE && $this->security->checkContact($userId, $this->post->getPostOwner($postId))) {
+                return true; // Private post, check if user is a contact
+            }
+
+            return false;
+        }
 
         // Retrieve Posts in a User's Public Feed
         public function getPublicFeedPosts(int $userid = null) {
