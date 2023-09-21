@@ -75,8 +75,8 @@ function throwSuccess($message){
 }
 
 function sendResponse($status, $data, $httpCode) {
-    echo json_encode(['status' => $status] + $data);
-    $GLOBALS['messages'][$status][] = $data['message'];
+    echo json_response(['status' => $status] + $data);
+    $GLOBALS['messages'][$status][] = $data && isset($data['message']) ? $data['message'] : null;
     http_response_code($httpCode);
 }
 

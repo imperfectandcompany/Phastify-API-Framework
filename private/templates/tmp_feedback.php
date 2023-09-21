@@ -5,7 +5,9 @@ Type of status:
 <?php endif; ?>
 <ul>
 <?php foreach($feedback as $notice): ?>
+    <?php if(isset($notice)): ?>
     <li>&emsp;<?php echo $notice; ?></li>
+    <?php endif; ?>
 <?php endforeach; ?>
 </ul>
 

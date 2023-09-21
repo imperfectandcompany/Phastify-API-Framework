@@ -23,10 +23,10 @@
  * @param int $status
  * @param int $limit
  */
-function json_response($data, $status = 200, $limit = 5)
+function json_response($data, $status = 200, $limit = 3)
 {
     $is_dev_mode = $GLOBALS['config']['devmode'] === 1;
-
+    $debug_version = false;
     if ($is_dev_mode) {
         // In dev mode, output debugging information
         $status = 403;
@@ -34,27 +34,47 @@ function json_response($data, $status = 200, $limit = 5)
 
         echo "<h2>API Response:</h2>";
         echo "<pre>";
-        echo json_encode($data, JSON_PRETTY_PRINT);
-        echo "</pre>";
-        echo "<h3>Debug version</h3>";
-
-        if (count($data) > $limit) {
-            echo "<pre>";
-            var_dump(array_slice($data, 0, $limit));
-            echo "</pre>";
+        $Result = array();
+        $Result['data'] = array(
+            'status' => $data['status'],
+            'result_limit' => $limit,
+        );
+        if($data && isset($data['count'])){
+            $Result['data']['count'] = $data['count'];
+        }
+        if($data && isset($data['message'])){
+            $Result['data']['message'] = $data['message'];
+        }
+        if($data && isset($data['results'])){
+            $Result['data']['results'] = $data['results'];
+        } elseif ($data && isset($data['result'])){
+            $Result['data']['result'] = $data['result'];
         } else {
-            echo "<pre>";
-            var_dump($data, true);
-            echo "</pre>";
+            $Result['data']['results'] = array_slice($data, 1, $limit);
+        }
+
+        echo json_encode($Result['data'], JSON_PRETTY_PRINT);
+        echo "</pre>";
+        if($debug_version){
+            echo "<h3>Debug version</h3>";
+
+            if (count($data) > $limit) {
+                echo "<pre>";
+                var_dump(array_slice($data, 0, $limit));
+                echo "</pre>";
+            } else {
+                echo "<pre>";
+                var_dump($data, true);
+                echo "</pre>";
+            }
         }
     } else {
         // In production mode, output the JSON-encoded data and exit the script
         http_response_code($status);
         header('Content-Type: application/json');
         echo json_encode(array_slice($data, 0, $limit), JSON_PRETTY_PRINT);
+        exit();
     }
-
-    exit();
 }
 
 function parse($text)

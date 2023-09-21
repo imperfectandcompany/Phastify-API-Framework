@@ -96,7 +96,7 @@ class DatabaseConnector {
      */
     public function __construct($host, $port, $db, $user, $pass, $charset) {
         if (!isset($host, $port, $db, $user, $pass, $charset)) {
-            $globals['error'] = "Warning: DB connection is missing variables.";
+            $GLOBALS['messages']['errors'][] = "Warning: DB connection is missing variables.";
             return false;
         }
         $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
@@ -105,7 +105,7 @@ class DatabaseConnector {
             $this->dbConnection = new PDO($dsn, $user, $pass, $options);
         }
         catch(\PDOException $e) {
-            $GLOBALS['errors'][] = $e->getMessage();
+            $GLOBALS['messages']['errors'][] = $e->getMessage();
             return false;
         }
     }
@@ -140,7 +140,7 @@ class DatabaseConnector {
             return $stmt->rowCount();
         }
         catch(\PDOException $e) {
-            $GLOBALS['errors'][] = $e->getMessage();
+            $GLOBALS['messages']['errors'][] = $e->getMessage();
             return false;
         }
     }
@@ -174,8 +174,12 @@ class DatabaseConnector {
             $stmt->execute();
             return array("count" => $stmt->rowCount(), "results" => $stmt->fetchAll());
         }
+        catch(Exception $e) {
+            $GLOBALS['messages']['errors'][] = '<b>Error: </b>' . $e->getMessage();
+            return false;
+        }
         catch(\PDOException $e) {
-            $GLOBALS['errors'][] = $e->getMessage();
+            $GLOBALS['messages']['errors'][] = '<b>INTERNAL ERROR: </b>' . $e->getMessage();
             return false;
         }
     }

@@ -117,11 +117,6 @@
             }
         }
 
-        // View archived post for user
-        public function viewArchivedPosts() {
-            // implementation here
-        }
-
         /**
          * Retrieves a single post by its ID.
          *
@@ -156,15 +151,14 @@
          * @param int $userId The ID of the user.
          * @return bool True if the user can view the post, false otherwise.
          */
-        private function canViewPost(int $postId, int $userId): bool {
+        public function canViewPost(int $postId, int $userId): bool {
             $postToWhom = $this->post->getToWhom($postId);
-
+            // TO DO: check if post owner matches current user id before checking if they are a contact
             if ($postToWhom === TO_WHOM_PUBLIC) {
                 return true; // Public post, anyone can view
             } elseif ($postToWhom === TO_WHOM_PRIVATE && $this->security->checkContact($userId, $this->post->getPostOwner($postId))) {
                 return true; // Private post, check if user is a contact
             }
-
             return false;
         }
 
@@ -203,6 +197,39 @@
                 return;
     }
 
-
+        /**
+         * For displaying an archived feed for the current user.
+         *
+         * @return void
+         */
+        public function viewArchivedPosts() {
+            // Check to see if the user is a contact of the user whose private feed they are trying to view
+            $result = $this->post->getArchivedPosts($GLOBALS['user_id']);
+            sendResponse('success', $result, SUCCESS_OK);
+            return;
+        }
+        
+        /**
+         * For displaying an archived feed (only public) for the current user.
+         *
+         * @return void
+         */
+        public function viewArchivedPostsPublic() {
+            // Fetch the archived public posts for the user.
+            $result = $this->post->getPosts($GLOBALS['user_id'], 3);
+            sendResponse('success', $result, SUCCESS_OK);
+            return;
+        }        
+        /**
+         * For displaying an archived feed (only private) for the current user.
+         *
+         * @return void
+         */
+        public function viewArchivedPostsPrivate() {
+            // Fetch the archived private posts for the user.
+            $result = $this->post->getPosts($GLOBALS['user_id'], 4);
+            sendResponse('success', $result, SUCCESS_OK);
+            return;
+        }
 }
 ?>

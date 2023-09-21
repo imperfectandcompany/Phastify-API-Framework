@@ -192,6 +192,14 @@ $router->addDocumentation('/post/:postId/unarchive', 'POST', 'Unarchives a post 
 $router->add('/users/archived-posts', 'PostController@viewArchivedPosts', 'GET');
 $router->addDocumentation('/users/archived-posts', 'GET', 'Allows the user to view their archived posts.');
 
+// View Archived Public Posts for User
+$router->add('/users/archived-posts/public', 'PostController@viewArchivedPostsPublic', 'GET');
+$router->addDocumentation('/users/archived-posts/public', 'GET', 'Allows the user to view their archived public posts.');
+
+// View Archived Private Posts for User
+$router->add('/users/archived-posts/private', 'PostController@viewArchivedPostsPrivate', 'GET');
+$router->addDocumentation('/users/archived-posts/private', 'GET', 'Allows the user to view their archived private posts.');
+
 // Retrieve Posts in a User's Public Feed
 $router->add('/posts/feed/public', 'PostController@getPublicFeedPosts', 'GET');
 $router->addDocumentation('/posts/feed/public', 'GET', 'Retrieves posts in the user\'s public feed.');
@@ -216,7 +224,7 @@ $router->addDocumentation('/post/:id/comments', 'GET', 'Retrieves comments for a
 $router->add('/post/:id/comment', 'CommentController@createPostComment', 'POST');
 $router->addDocumentation('/post/:id/comment', 'POST', 'Creates a new comment on a post.');
 $router->enforceParameters('/post/:id/comment', 'POST', [
-    'commentBody' => 'body',       // Content of the comment in the request body
+    'comment' => 'body',       // Content of the comment in the request body
 ]);
 
 // Delete a comment

@@ -149,17 +149,15 @@ class Post
 
         // Define the SQL update query components
         $table = "posts";
-        $setClause = 'expire_time = NULL, last_edited = NOW(), to_whom = ?, to_whom_original = ?';
+        $setClause = 'expire_time = NULL, last_edited = NOW(), to_whom_original = NULL, to_whom = ?';
         $whereClause = 'id = ?';
 
         // Prepare filter parameters for the query
-        $filterParams = makeFilterParams(array($newToWhom, $currentToWhom, $postId));
+        $filterParams = makeFilterParams(array($newToWhom, $postId));
 
         // Execute the update query
         return $this->dbConnection->updateData($table, $setClause, $whereClause, $filterParams);
     }
-
-
 
     /**
      * Updates the 'to_whom' value of a post.
@@ -184,7 +182,7 @@ class Post
         $whereClause = 'id = ?';
 
         // Prepare filter parameters for the query
-        $filterParams = makeFilterParams([$newToWhom, $currentToWhom, $postId]);
+        $filterParams = makeFilterParams([$newToWhom, $toWhom, $postId]);
 
         // Execute the update query
         return $this->dbConnection->updateData($table, $setClause, $whereClause, $filterParams);
@@ -222,6 +220,7 @@ class Post
     public function getPost(int $postId, int $userid = null)
     {
         // TODO: OMIT ARCHIVED POSTS (TO_WHOM = 3 || TO_WHOM = 4 || EXPIRE_TIME < CURRENT_TIMESTAMP)
+        // EDIT: ALLOW USER TO ACCESS ARCHIVED POSTS IF THEY ARE THE OWNER
         $query = 'WHERE id = ?';
         $select = 'id, body, to_whom, user_id, expire_time, posted_on, last_edited, likes';
         $paramValues = array($postId);
@@ -251,6 +250,23 @@ class Post
         if ($userid === $GLOBALS['user_id']) {
             $select .= ', original_content, flagged_content, to_whom_original';
         }
+        $filter_params = makeFilterParams($paramValues);
+        $result = $this->dbConnection->viewData("posts", $select, $query, $filter_params);
+        return $result;
+    }
+
+    /**
+     * Get posts for a user by 'to_whom' value.
+     *
+     * @param int $userid The user ID.
+     * @param int $to_whom The 'to_whom' value.
+     * @return array|null The posts data or null if not found.
+     */
+    public function getArchivedPosts(int $userid)
+    {
+        $query = 'WHERE to_whom = 3 OR to_whom = 4 AND user_id = ?';
+        $select = 'id, body, to_whom, user_id, expire_time, posted_on, last_edited, likes, original_content, flagged_content, to_whom_original';
+        $paramValues = array($userid);
         $filter_params = makeFilterParams($paramValues);
         $result = $this->dbConnection->viewData("posts", $select, $query, $filter_params);
         return $result;
