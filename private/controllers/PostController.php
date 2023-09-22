@@ -170,7 +170,8 @@
                     throwWarning("Current user owns post");
                     return true; // User can view private post since they own it
                 } else if($this->security->checkContact($userId, $postOwner)){
-                    throwWarning("Current user does not own post but is a contact of the owner");
+                    throwWarning("Current user does not own post");
+                    throwWarning("Current user is a contact of the post owner");
                     return true; // User can view private post since they are a contact
                 }
                 throwError("Current user does not own post and is not a contact of the owner");

@@ -62,13 +62,14 @@ $GLOBALS['config']['profile_lookup'] = "id,username,email,admin,verified,created
 
 //Do not touch -- These are settings we should define or set, but not adjust unless we absolutely need to.
 $GLOBALS['errors'] = array();
+$GLOBALS['logs'] = array();
+
+
 
 $GLOBALS['messages'] = array(); //Main array for all status messages
 $GLOBALS['messages']['error'] = array(); //Main array for all status messages
 $GLOBALS['messages']['warning'] = array(); //Main array for all status messages
 $GLOBALS['messages']['success'] = array(); //Main array for all status messages
 $GLOBALS['messages']['test'] = array(); //Main array for all status messages
-$GLOBALS['messages']['test']['error'] = array(); //Main array for all status messages
-$GLOBALS['messages']['test']['warning'] = array(); //Main array for all status messages
-$GLOBALS['messages']['test']['success'] = array(); //Main array for all status messages
+
 ?>

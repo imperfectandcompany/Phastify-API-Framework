@@ -1,6 +1,8 @@
 <?php
 // tests/test.post.php
 
+
+
 /*
 to_whom 1 = public
 to_whom 2 = private
@@ -64,7 +66,7 @@ Not a contact of user ID 13
     function testCanViewOwnPublicPost($post) {
         // Given: Post 248 is public and authored by user ID 12
         $canView = $post->canViewPost(248, 12);
-        customAssert($canView === false, 'User should be able to view their own public post');
+        customAssert($canView === true, 'User should be able to view their own public post');
     }
 
     // Test: A user should be able to view their own private post

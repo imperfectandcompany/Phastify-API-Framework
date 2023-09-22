@@ -53,7 +53,7 @@ $result = authenticate_user($token, $dbConnection);
         // Run testing script
         $GLOBALS['config']['testmode'] = 1; //This enables testing
         include_once($GLOBALS['config']['private_folder'].'/tests/tests.php');
-        $GLOBALS['config']['testmode'] = 0; //This enables testing
+        $GLOBALS['config']['testmode'] = 0; //This disables testing
     }
 
 // handle case where user is not authenticated

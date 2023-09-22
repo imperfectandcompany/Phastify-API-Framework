@@ -12,7 +12,6 @@ class Security {
         // $query = "WHERE id = ?";
         // $this->user = $this->dbConnection->viewSingleData($GLOBALS['db_conf']['db_db'].".users", "*", $query, $filter_params);
     }
-    
     /**
      * Check if a user is a contact of another user.
      *
@@ -22,13 +21,19 @@ class Security {
      */
     public function checkContact(int $userid, int $contactId) {
         $paramValues = makeFilterParams(array($userid, $contactId));
-        $query = "WHERE id = ? AND contact_id = ?";
+        $query = "WHERE user_id = ? AND contact_id = ?";
         
         // If the user ID matches the contact ID, they are considered a contact.
         if ($userid == $contactId) {
             return true;
         }
-        
+        // Example on how i debugged my function and found the issue using my testing feature :)
+        // global $currentTest; 
+
+        // if($currentTest === 'testCanViewPrivatePostAsContact'){
+        //        echo $userid .  "   ". $contactId;
+        // }
+
         // Check if a record exists in the 'contacts' table with the specified IDs.
         if ($this->dbConnection->viewSingleData('contacts', '*', $query, $paramValues)['result']) {
             return true;

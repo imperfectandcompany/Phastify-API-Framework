@@ -8,8 +8,6 @@
 <?php 
     if (!isset($GLOBALS['config']['testmode']) && $GLOBALS['config']['testmode'] != true) {
         display_feedback($GLOBALS['messages']);
-    } else {
-        display_feedback($GLOBALS['messages']["test"]);
     }
 ?>
 <?php else: ?>

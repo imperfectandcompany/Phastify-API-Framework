@@ -20,17 +20,19 @@ function display_feedback($messages = null)
             switch($key)
             {
                 case"error":
-                case"test":
-                    extract(array("f_type" => "test", "f_header" => "Test"));
-                break;                     
+                    extract(array("f_type" => "danger", "f_header" => "Error"));                  
                 case"errors":
                     extract(array("f_type" => "danger", "f_header" => "Error"));
                 break;
                 case"warning":
                     extract(array("f_type" => "warning", "f_header" => "Warning"));
                 break;
+                case"test":
+                break;                
                 case"success":
                     extract(array("f_type" => "success", "f_header" => "Success"));
+                break;
+                default:
                 break;
                
             }
@@ -96,7 +98,6 @@ function throwSuccess($message){
     } else {
         global $currentTest;
         $GLOBALS['logs'][$currentTest]["success"][] = $message;  // Store the message with the test name
-        $GLOBALS['messages']["test"]["success"][] = $message;
     }
 }
 
@@ -107,7 +108,9 @@ function sendResponse($status, $data, $httpCode) {
         http_response_code($httpCode);
     } else {
         global $currentTest;
-        $GLOBALS['logs'][$currentTest][$status][] = $data && isset($data['message']) ? $data['message'] : null; // Store the message with the test name
+        if($data && isset($data['message'])){
+            $GLOBALS['logs'][$currentTest][$status][] = $data['message'];  // Store the message with the test name
+        }
     }
 }
 
