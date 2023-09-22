@@ -20,6 +20,9 @@ function display_feedback($messages = null)
             switch($key)
             {
                 case"error":
+                case"test":
+                    extract(array("f_type" => "test", "f_header" => "Test"));
+                break;                     
                 case"errors":
                     extract(array("f_type" => "danger", "f_header" => "Error"));
                 break;
@@ -29,9 +32,7 @@ function display_feedback($messages = null)
                 case"success":
                     extract(array("f_type" => "success", "f_header" => "Success"));
                 break;
-                case"test":
-                    extract(array("f_type" => "test", "f_header" => "Test"));
-                break;                
+               
             }
             extract(array("feedback" => $messages[$key]));
             require($GLOBALS['config']['private_folder'].'/templates/tmp_feedback.php');
@@ -51,16 +52,21 @@ function trimSlash($file){
     return $trimmedPath;
 }
 
+function isTest(){
+    return !isset($GLOBALS['config']['testmode']) && $GLOBALS['config']['testmode'] != true;
+}
+
 function throwWarning($message){
     $bt = debug_backtrace();
     $caller = array_shift($bt);
     $file = $caller['file'];
     $line =  $caller['line'];
     $message = $message . " - Thrown in file " . trimSlash($file) . " on line " . $line;
-    if (!isset($GLOBALS['config']['testmode']) && $GLOBALS['config']['testmode'] != true) {
+    if (isTest()) {
     $GLOBALS['messages']["warning"][] = $message;
     } else {
-        $GLOBALS['messages']["test"]["warning"][] = $message;
+        global $currentTest;
+        $GLOBALS['logs'][$currentTest]["warning"][] = $message;  // Store the message with the test name
     }
 }
 
@@ -70,22 +76,26 @@ function throwError($message){
     $file = $caller['file'];
     $line =  $caller['line'];
     $message = $message . " - Thrown in file " . trimSlash($file) . " on line " . $line;
-    if (!isset($GLOBALS['config']['testmode']) && $GLOBALS['config']['testmode'] != true) {
+    if (isTest()) {
     $GLOBALS['messages']["error"][] = $message;
     } else {
-        $GLOBALS['messages']["test"]["error"][] = $message;
+        global $currentTest;
+        $GLOBALS['logs'][$currentTest]["error"][] = $message;  // Store the message with the test name
     }
 }
 
 function throwSuccess($message){
+    
     $bt = debug_backtrace();
     $caller = array_shift($bt);
     $file = $caller['file'];
     $line =  $caller['line'];
     $message = $message . " - Thrown in file " . trimSlash($file) . " on line " . $line;
-    if (!isset($GLOBALS['config']['testmode']) && $GLOBALS['config']['testmode'] != true) {
+    if (isTest()) {
         $GLOBALS['messages']["success"][] = $message;
     } else {
+        global $currentTest;
+        $GLOBALS['logs'][$currentTest]["success"][] = $message;  // Store the message with the test name
         $GLOBALS['messages']["test"]["success"][] = $message;
     }
 }
@@ -96,7 +106,8 @@ function sendResponse($status, $data, $httpCode) {
         $GLOBALS['messages'][$status][] = $data && isset($data['message']) ? $data['message'] : null;
         http_response_code($httpCode);
     } else {
-        $GLOBALS['messages']["test"][$status][""] = $data && isset($data['message']) ? $data['message'] : null;
+        global $currentTest;
+        $GLOBALS['logs'][$currentTest][$status][] = $data && isset($data['message']) ? $data['message'] : null; // Store the message with the test name
     }
 }
 
