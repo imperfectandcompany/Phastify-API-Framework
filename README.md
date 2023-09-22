@@ -1,17 +1,132 @@
 # postogon-api-v2
 
-notes: gotta add validation for param in the sense that when we add a route with a param, we should make sure the method within controller being called includes that within the function param to prevent it from continuing.
-
-add validation for this error:
-https://v2.api.postogon.com/authenticate?token=fawwew
-<br />
-<b>Fatal error</b>:  Uncaught Error: Call to undefined method Router::getRoutes() in /usr/www/igfastdl/postogon-api/public_html/index.php:59
-Stack trace:
-#0 {main}
-  thrown in <b>/usr/www/igfastdl/postogon-api/public_html/index.php</b> on line <b>59</b><br />
-
 sep18
 https://v2.api.postogon.com/list-routes
+
+## Creating and Running Tests:
+
+### 1. Overview
+This guide introduces the test runner for the application. It provides a systematic approach to validate features using a series of defined tests. 
+
+### 2. Prerequisites
+- Ensure you have included all necessary files in your test script.
+- Familiarity with the application's logic and functionalities.
+
+### 3. Setting up the Test Environment
+
+Before writing or running tests, make sure you have set up the testing environment:
+
+```php
+include_once($GLOBALS['config']['private_folder'].'/tests/test_case.php');
+include_once($GLOBALS['config']['private_folder'].'/controllers/{ControllerBeingTested}Controller.php');
+include_once($GLOBALS['config']['private_folder'].'/classes/class.testRunner.php');
+
+${ControllerBeingTested} = new {ControllerBeingTested}Controller($dbConnection);
+```
+
+### 4. Writing Tests
+Tests are simple PHP functions. Here's how you define one:
+
+```php
+function testName($objectUnderTest) {
+    // Test logic here
+    // Use customAssert function to validate conditions
+    customAssert(/* condition */, "Error Message if condition fails");
+}
+```
+Tips:
+Make test names descriptive. E.g., **testCanViewOwnPublicPost**.
+Use **customAssert** to verify the logic. If the condition is false, the test will fail.
+
+### 5. Grouping Tests
+Group tests into categories for better organization
+
+```php
+$testCannotViewOwnPosts = [
+  "testCannotViewOwnUnauthorizedPost",
+];
+$testCanViewOthersPosts = [
+  "testCanViewPublicPostAsContact",
+  "testCanViewPublicPostAsNoContact",
+  "testCanViewPrivatePostAsContact"
+  // ... More tests
+];
+```
+
+Now define all your test categories:
+
+```php
+$tests = [
+    "Can View Own Posts" => $testCanViewOwnPosts,
+    "Cannot View Own Posts" => $testCannotViewOwnPosts,
+    "Can View Others' Posts" => $testCanViewOthersPosts,
+    "Cannot View Others' Posts" => $testCannotViewOthersPosts
+];
+```
+
+### 6. Running Tests
+Use the TestRunner class to execute the tests:
+
+```php
+$runner = new TestRunner(${ControllerBeingTested});
+$runner->runTests($tests);
+```
+### 7. Debugging
+If a test is failing, or you're encountering unexpected behaviors, follow these steps:
+
+1. **Isolate the Issue:** Comment out other tests and only run the problematic test.
+2. **Print Debug Information:**
+- Within the application logic, you can use the global **$currentTest** variable to conditionally print information.
+
+```php
+global $currentTest;
+if ($currentTest === 'specificTestName'){
+    echo "Debugging info here";
+}
+```
+3. **Check Error Message:** The test runner will display a clear error message if a test fails.
+
+### 8. Reporting
+After all tests run, a summary is displayed showing the number of passed and failed tests, along with other metrics. More details on that can be found in the **Delving Deeper** section.
+
+### 9. Cleanup
+Once you're done testing, the runner will automatically reset global settings used during the testing phase.
+
+### Conclusion
+Automated testing provides an efficient way to ensure the application works as expected. By following this guide, you can easily add more tests and maintain a robust, error-free application.
+
+## Delving Deeper: Writing Functions with Meaningful Feedback for Tests
+
+### Understanding the `canViewPost` Function
+
+The `canViewPost` function is crucial as it checks whether a given user can view a specific post. Here's its signature:
+
+```php
+/**
+ * Checks if the current user can view a post.
+ *
+ * @param int $postId The ID of the post to check.
+ * @param int $userId The ID of the user.
+ * @return bool True if the user can view the post, false otherwise.
+ */
+public function canViewPost(int $postId, int $userId): bool { ... }
+```
+
+Within this function, there are numerous conditions that dictate if a user has the necessary permissions to view a post. In order to provide meaningful feedback during testing, the function utilizes custom methods like **throwWarning** and **throwError**. 
+
+Both methods include contextual information from where they were invoked, such as the file and line number. This aids in debugging, especially when tests fail.
+
+### Custom Feedback Mechanisms
+
+- **throwWarning**: This method logs a warning message. It's particularly useful for conditions that might need attention but don't necessarily indicate a failure. For example, when a post is private but still accessible by a user, it throws a warning:
+  
+```php
+throwWarning("Post is private");
+```
+
+- **throwError**: Similar to **throwWarning**, but used for more critical issues that indicate a test failure.
+
+When using throwWarning within tests or application logic, it automatically logs the file and line number where the warning was thrown. This information is invaluable when trying to understand the context or source of a particular warning.
 
 ## Router Class Enhancements
 
@@ -218,3 +333,14 @@ Adds a new route to the router.
 14. Parse the URI to find any parameter placeholders and save them to an array.
 15. If the URI does not already exist in the routes array, add it along with the HTTP request method and controller name and method.
 16. If the URI already exists in the routes array, add the HTTP request method and controller name and method to the existing URI.
+
+
+notes: gotta add validation for param in the sense that when we add a route with a param, we should make sure the method within controller being called includes that within the function param to prevent it from continuing.
+
+add validation for this error:
+https://v2.api.postogon.com/authenticate?token=fawwew
+<br />
+<b>Fatal error</b>:  Uncaught Error: Call to undefined method Router::getRoutes() in /usr/www/igfastdl/postogon-api/public_html/index.php:59
+Stack trace:
+#0 {main}
+  thrown in <b>/usr/www/igfastdl/postogon-api/public_html/index.php</b> on line <b>59</b><br />
