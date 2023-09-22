@@ -20,7 +20,8 @@ $GLOBALS['db_conf']['db_db']    =    $table;
 $GLOBALS['db_conf']['port']     =    '3306';
 $GLOBALS['db_conf']['db_charset']  = 'utf8mb4';
 
-$GLOBALS['config']['devmode'] = 1; //This enables dev mode to print out dev inforamtion -- DO NOT USE IN PRODUCTION!
+$GLOBALS['config']['devmode'] = 1; //This enables dev mode to print out dev information -- DO NOT USE IN PRODUCTION!
+$GLOBALS['config']['testmode'] = 1; //This enables testing
 
 //General settings
 $GLOBALS['config']['max_username_length'] = '32';
@@ -66,5 +67,8 @@ $GLOBALS['messages'] = array(); //Main array for all status messages
 $GLOBALS['messages']['error'] = array(); //Main array for all status messages
 $GLOBALS['messages']['warning'] = array(); //Main array for all status messages
 $GLOBALS['messages']['success'] = array(); //Main array for all status messages
-
+$GLOBALS['messages']['test'] = array(); //Main array for all status messages
+$GLOBALS['messages']['test']['error'] = array(); //Main array for all status messages
+$GLOBALS['messages']['test']['warning'] = array(); //Main array for all status messages
+$GLOBALS['messages']['test']['success'] = array(); //Main array for all status messages
 ?>

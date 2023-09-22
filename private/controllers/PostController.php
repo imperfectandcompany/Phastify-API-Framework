@@ -5,6 +5,9 @@
     class PostController {
         
         protected $dbConnection;
+
+        private $isTestingMode = false; // Add this to the top of your class
+
         
         public function __construct($dbConnection)
         {
@@ -152,13 +155,44 @@
          * @return bool True if the user can view the post, false otherwise.
          */
         public function canViewPost(int $postId, int $userId): bool {
+            // getToWhom checks if expire time is null and if null does necessary cleanup to update to_whom when it is expired.
             $postToWhom = $this->post->getToWhom($postId);
-            // TO DO: check if post owner matches current user id before checking if they are a contact
             if ($postToWhom === TO_WHOM_PUBLIC) {
+                throwWarning("Post is public");
                 return true; // Public post, anyone can view
-            } elseif ($postToWhom === TO_WHOM_PRIVATE && $this->security->checkContact($userId, $this->post->getPostOwner($postId))) {
-                return true; // Private post, check if user is a contact
+            } 
+
+            $postOwner = $this->post->getPostOwner($postId);
+            
+            if ($postToWhom === TO_WHOM_PRIVATE) {
+                throwWarning("Post is private");
+                if($postOwner == $userId){
+                    throwWarning("Current user owns post");
+                    return true; // User can view private post since they own it
+                } else if($this->security->checkContact($userId, $postOwner)){
+                    throwWarning("Current user does not own post but is a contact of the owner");
+                    return true; // User can view private post since they are a contact
+                }
+                throwError("Current user does not own post and is not a contact of the owner");
+                return false;
             }
+
+            if ($postToWhom === TO_WHOM_PUBLIC_ARCHIVE || $postToWhom === TO_WHOM_PRIVATE_ARCHIVE) {
+                throwWarning("Post is archived");
+                if($postOwner == $userId){
+                    throwWarning("Current user owns post");
+                    return true; // User can view archived post since they own it
+                }
+                throwError("Current user does not own archived post");
+                return false; // User cannot view archived post since they don't own it
+            }
+
+            if ($postToWhom === TO_WHOM_SOFT_DELETE) {
+                return false;
+            }
+
+            throwError("Post is not public, private, or archived.");
+            throwError("No user-level permission to view regardless of relationship with post.");
             return false;
         }
 

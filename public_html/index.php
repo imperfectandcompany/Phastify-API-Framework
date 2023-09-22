@@ -45,9 +45,23 @@ if (empty($token)) {
 // authenticate the user
 $result = authenticate_user($token, $dbConnection);
 
-// get an instance of the Devmode class
-$devMode = new Dev($dbConnection);
-$GLOBALS['config']['devmode'] = $devMode->getDevModeStatus();
+    // get an instance of the Devmode class
+    $devMode = new Dev($dbConnection);
+    $GLOBALS['config']['devmode'] = $devMode->getDevModeStatus();
+    // Check if we're in devmode
+    if ($GLOBALS['config']['devmode']) {
+        // Run testing script
+        try {
+            $GLOBALS['config']['testmode'] = 1; //This enables testing
+            include_once($GLOBALS['config']['private_folder'].'/tests/tests.php');
+            $GLOBALS['config']['testmode'] = 0; //This enables testing
+        } catch (Exception $e) {
+            $GLOBALS['config']['testmode'] = 0; //This enables testing
+            // Handle test failures (e.g., log the error, display a message)
+            echo 'Test failure: ' . $e->getMessage();
+            exit(1); // Exit with a non-zero status code
+        }
+    }
 
 // handle case where user is not authenticated
 if ($result['status'] === 'error') {

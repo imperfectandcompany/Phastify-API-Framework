@@ -10,9 +10,12 @@ define('ERROR_USER_ALREADY_EXISTS', 409);
 define('SUCCESS_OK', 200);
 define('SUCCESS_CREATED', 201);
 define('DEV_MODE_TOKEN', '003adeec955df60c4548880d259bb6bfbc774de2633e9e67cbc539a4b807fd6bacd02146b66268a5bf9ebb8e9f717988875a6ab433f1bad88fe9b19a2347bc10');
-
 define('PUBLIC', 1);
 define('PRIVATE', 2);
 define('TO_WHOM_PUBLIC', 1);
 define('TO_WHOM_PRIVATE', 2);
+define('TO_WHOM_PUBLIC_ARCHIVE', 3);
+define('TO_WHOM_PRIVATE_ARCHIVE', 4);
+define('TO_WHOM_SOFT_DELETE', 5);
+
 ?>

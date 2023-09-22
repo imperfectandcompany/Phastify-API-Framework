@@ -46,34 +46,43 @@ include_once($GLOBALS['config']['private_folder'].'/classes/class.post.php');
             $userId = $GLOBALS['user_id'];
             $post = new Post($this->dbConnection);
             $postOwner = $post->getPostOwner($id);
-    
+
+            // Check if the post was not found
             if ($postOwner === false) {
                 sendResponse('error', ['message' => 'Post not found'], ERROR_NOT_FOUND);
                 return;
             }
 
+            // Check if the user is the post owner or has permission to view the post
             if ($postOwner === $userId || $this->postController->canViewPost($id, $userId)) {
+                // Parse JSON input from the request body
                 $postBody = json_decode(file_get_contents("php://input"));
-                $postBodyArray = (array)$postBody;
+
                 try {
+                    // Check if the 'comment' field is present in the request body
                     CheckInputFields(['comment'], $postBody);
-                    $result = $this->comments->postComment($id, $postBodyArray);
+
+                    // Post the comment
+                    $result = $this->comments->postComment($id, $postBody);
 
                     if ($result) {
-                        echo json_encode(array('status' => 'success', 'message' => 'Comment created'));
+                        // Return success response
+                        echo json_encode(['status' => 'success', 'message' => 'Comment created']);
                         http_response_code(SUCCESS_CREATED);
                     } else {
                         throw new Exception('Unable to create comment', ERROR_INTERNAL_SERVER);
                     }
                 } catch (Exception $e) {
-                    echo json_encode(array('status' => 'error', 'message' => $e->getMessage()));
+                    // Handle and report exceptions
+                    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
                     http_response_code($e->getCode() ?: ERROR_BAD_REQUEST);
                 }
             } else {
-            sendResponse('error', ['message' => 'Unauthorized to view the post comments'], ERROR_FORBIDDEN);
-            return;
+                // User is not authorized to view the post
+                sendResponse('error', ['message' => 'Unauthorized to view the post comments'], ERROR_FORBIDDEN);
             }
         }
+
 
         // Delete a comment
         public function deleteComment(int $id) {
