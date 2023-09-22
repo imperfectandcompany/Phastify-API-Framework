@@ -29,6 +29,9 @@ function display_feedback($messages = null)
                 case"success":
                     extract(array("f_type" => "success", "f_header" => "Success"));
                 break;
+                case"test":
+                    extract(array("f_type" => "test", "f_header" => "Test"));
+                break;                
             }
             extract(array("feedback" => $messages[$key]));
             require($GLOBALS['config']['private_folder'].'/templates/tmp_feedback.php');
@@ -54,15 +57,24 @@ function throwWarning($message){
     $file = $caller['file'];
     $line =  $caller['line'];
     $message = $message . " - Thrown in file " . trimSlash($file) . " on line " . $line;
+    if (!isset($GLOBALS['config']['testmode']) && $GLOBALS['config']['testmode'] != true) {
     $GLOBALS['messages']["warning"][] = $message;
+    } else {
+        $GLOBALS['messages']["test"]["warning"][] = $message;
+    }
 }
+
 function throwError($message){
     $bt = debug_backtrace();
     $caller = array_shift($bt);
     $file = $caller['file'];
     $line =  $caller['line'];
     $message = $message . " - Thrown in file " . trimSlash($file) . " on line " . $line;
+    if (!isset($GLOBALS['config']['testmode']) && $GLOBALS['config']['testmode'] != true) {
     $GLOBALS['messages']["error"][] = $message;
+    } else {
+        $GLOBALS['messages']["test"]["error"][] = $message;
+    }
 }
 
 function throwSuccess($message){
@@ -71,13 +83,21 @@ function throwSuccess($message){
     $file = $caller['file'];
     $line =  $caller['line'];
     $message = $message . " - Thrown in file " . trimSlash($file) . " on line " . $line;
-    $GLOBALS['messages']["success"][] = $message;
+    if (!isset($GLOBALS['config']['testmode']) && $GLOBALS['config']['testmode'] != true) {
+        $GLOBALS['messages']["success"][] = $message;
+    } else {
+        $GLOBALS['messages']["test"]["success"][] = $message;
+    }
 }
 
 function sendResponse($status, $data, $httpCode) {
-    echo json_response(['status' => $status] + $data);
-    $GLOBALS['messages'][$status][] = $data && isset($data['message']) ? $data['message'] : null;
-    http_response_code($httpCode);
+    if (!isset($GLOBALS['config']['testmode']) && $GLOBALS['config']['testmode'] != true) {
+        echo json_response(['status' => $status] + $data);
+        $GLOBALS['messages'][$status][] = $data && isset($data['message']) ? $data['message'] : null;
+        http_response_code($httpCode);
+    } else {
+        $GLOBALS['messages']["test"][$status][""] = $data && isset($data['message']) ? $data['message'] : null;
+    }
 }
 
 

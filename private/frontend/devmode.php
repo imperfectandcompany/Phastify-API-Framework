@@ -6,7 +6,11 @@
 <?php if(count($GLOBALS['messages']) > 0): ?>
 <h4>Status</h4>
 <?php 
-    display_feedback($GLOBALS['messages']);
+    if (!isset($GLOBALS['config']['testmode']) && $GLOBALS['config']['testmode'] != true) {
+        display_feedback($GLOBALS['messages']);
+    } else {
+        display_feedback($GLOBALS['messages']["test"]);
+    }
 ?>
 <?php else: ?>
 <h4>Status not available</h4>
