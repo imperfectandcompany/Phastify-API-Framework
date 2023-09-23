@@ -36,8 +36,7 @@ include_once($GLOBALS['config']['private_folder'].'/classes/class.post.php');
                     sendResponse('error', ['message' => 'Post comments not found'], ERROR_NOT_FOUND);
                 }
             } else {
-            sendResponse('error', ['message' => 'Unauthorized to view the post comments.'], ERROR_FORBIDDEN);
-            return;
+            return sendResponse('error', ['message' => 'Unauthorized to view the post comments.'], ERROR_FORBIDDEN);
             }
         }
        
@@ -79,7 +78,7 @@ include_once($GLOBALS['config']['private_folder'].'/classes/class.post.php');
                 }
             } else {
                 // User is not authorized to view the post
-                sendResponse('error', ['message' => 'Unauthorized to view the post comments'], ERROR_FORBIDDEN);
+                sendResponse('error', ['message' => 'Unauthorized to create comment on the post'], ERROR_FORBIDDEN);
             }
         }
 

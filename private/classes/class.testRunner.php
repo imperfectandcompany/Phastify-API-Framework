@@ -1,7 +1,7 @@
 <?php
 class TestRunner
 {
-    private $objectUnderTest;
+    private $controllers;
     private $failed = false;
     private $currentFailed = false;
 
@@ -13,10 +13,15 @@ class TestRunner
         'successes' => 0
     ];
 
-    public function __construct($objectUnderTest)
-    {
-        $this->objectUnderTest = $objectUnderTest;
+    public function __construct($controllers) {
+        $this->controllers = $controllers;
         $this->addCSS();
+    }
+
+    public function runTestsForController($controller, $tests) {
+        // Assuming you iterate through the $tests array inside the runTests() method
+        $this->controller = $controller;
+        $this->runTests($tests);
     }
 
     public function runTests($categories)
@@ -25,7 +30,15 @@ class TestRunner
         $totalTests = array_sum(array_map('count', $categories)); // Get the total number of tests
         $totalTestsRun = 0;
     
-        foreach ($categories as $category => $tests) {
+        foreach ($categories as $category => $testData) {
+
+            // Extract the relevant controller
+            $controllerName = $testData['controller'];
+            if (!isset($this->controllers[$controllerName])) {
+                throw new Exception("Controller $controllerName not provided.");
+            }
+            $controller = $this->controllers[$controllerName];
+
             // Initialize category metrics
             $categoryMetrics = [
                 'warnings' => 0,
@@ -35,14 +48,14 @@ class TestRunner
     
             echo "<div class='category'>Category: {$category}</div>";
     
-            foreach ($tests as $test) {
-                $count = count($tests);
-                $index = array_search($test, $tests) + 1;
+            foreach ($testData['tests'] as $test) {
+                $count = count($testData['tests']);
+                $index = array_search($test, $testData['tests']) + 1;
                 $remaining = $totalTests - $totalTestsRun;
                 echo "Initiating test {$index} out of {$count} in this category ({$remaining} total remaining)\n<br><br>";
                 $totalTestsRun++;
     
-                $this->runTest($test);
+                $this->runTest($test, $controller);
     
                 // Capture category metrics from $GLOBALS
                 if (isset($GLOBALS['logs'][$GLOBALS['currentTest']])) {
@@ -79,18 +92,24 @@ class TestRunner
 
     private function cleanup()
     {
-        $GLOBALS['config']['testmode'] = false;
+        $GLOBALS['config']['testmode'] = 0;
         $GLOBALS['logs'][] = [];
         $GLOBALS['currentTest'] = null;
     }
 
-    private function runTest($testName)
+    private function runTest($testName, $controller)
     {
         $GLOBALS['currentTest'] = $testName; // Set the currently running test name
         echo "<div class='test'>Running: {$testName}... ";
         try {
-            $this->currentFailed = false;
-            $testName($this->objectUnderTest);
+                $this->currentFailed = false;
+                try{
+                    $testName($controller);
+                }
+                catch(Error $e)
+                {
+                    throw new Exception($e->getMessage());
+                }
             echo "<span class='passed'>PASSED</span>";
             $this->metrics['passed']++;
         } catch (Exception $e) {
@@ -115,6 +134,7 @@ class TestRunner
         <style>
             .category {
                 font-weight: bold;
+                margin-top: 20px;
                 margin-bottom: 20px;
                 background-color: #f3f4f6;
                 padding: 10px;

@@ -48,13 +48,6 @@ $result = authenticate_user($token, $dbConnection);
     // get an instance of the Devmode class
     $devMode = new Dev($dbConnection);
     $GLOBALS['config']['devmode'] = $devMode->getDevModeStatus();
-    // Check if we're in devmode
-    if ($GLOBALS['config']['devmode'] && $GLOBALS['config']['testmode']) {
-        // Run testing script
-        $GLOBALS['config']['testmode'] = 1; //This enables testing
-        include_once($GLOBALS['config']['private_folder'].'/tests/tests.php');
-        $GLOBALS['config']['testmode'] = 0; //This disables testing
-    }
 
 // handle case where user is not authenticated
 if ($result['status'] === 'error') {
@@ -275,9 +268,18 @@ $router->add('/logout/:deviceToken/:param2/:optionalParam', 'UserController@theO
 if($GLOBALS['config']['devmode'] == 1){
     $router->add('/list-routes', 'DevController@listRoutes', 'GET');
 }
+$GLOBALS['config']['testmode'] = 0; //This disables testing
 
 //dispatch router since authentication and global variables are set!
 $router->dispatch($GLOBALS['url_loc'], $dbConnection, $GLOBALS['config']['devmode']);
+$GLOBALS['config']['testmode'] = 1; //This enables testing
+
+// Check if we're in devmode
+if ($GLOBALS['config']['devmode'] && $GLOBALS['config']['testmode']) {
+    // Run testing script
+    include_once($GLOBALS['config']['private_folder'].'/tests/tests.php');
+    $GLOBALS['config']['testmode'] = 0; //This disables testing
+}
 
 
 //// router
@@ -294,6 +296,7 @@ $router->dispatch($GLOBALS['url_loc'], $dbConnection, $GLOBALS['config']['devmod
 if($GLOBALS['config']['devmode'] == 1){
     include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');  
 }
+
 
 // unset token to prevent accidental use
 unset($token);

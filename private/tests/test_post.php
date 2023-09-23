@@ -97,6 +97,21 @@ function testCannotViewOwnUnauthorizedPost($post) {
     customAssert($canView === false, 'User should not be able to view this post despite being the owner');
 }
 
+// Developer Test: We should be able to grab the correct post owner from the post
+function testGetPostOwner($post) {
+    // Given: Post 256 belongs to user ID 12
+    $postUid = $post->post->getPostOwner(256);
+    customAssert($postUid === 12, 'We should be able to grab the correct post owner from the post');
+}
+
+// Developer Test: This test of getPostOwner should fail, we match it with the wrong UID
+function testFailedGetPostOwner($post) {
+    // Given: Post 256 belongs to user ID 12
+    $postUid = $post->post->getPostOwner(256);
+    $wrongComparison = $postUid == 13;
+    customAssert($wrongComparison === false, 'This test should fail, we match it with the wrong UID');
+}
+
 // Test: A user should not be able to view another person's post that is soft deleted
 function testCannotViewUnauthorizedPost($post) {
     // Given: Post 256's to_whom column is 5 (soft delete) and does not belong to user ID 15

@@ -102,7 +102,7 @@ function throwSuccess($message){
 }
 
 function sendResponse($status, $data, $httpCode) {
-    if (!isset($GLOBALS['config']['testmode']) && $GLOBALS['config']['testmode'] != true) {
+    if (isset($GLOBALS['config']['testmode']) && $GLOBALS['config']['testmode'] != true) {
         echo json_response(['status' => $status] + $data);
         $GLOBALS['messages'][$status][] = $data && isset($data['message']) ? $data['message'] : null;
         http_response_code($httpCode);
@@ -123,9 +123,8 @@ function checkInputFields($inputFields, $postBody) {
     foreach ($inputFields as $field) {
         if (!isset($postBody->{$field}) || empty($postBody->{$field})) {
             $error = "Error: " . ucfirst($field) . " field is required";
-            echo json_encode(array('status' => 'error', 'message' => $error));
-            http_response_code(400);  // Bad Request
-            exit;
+            sendResponse('error', ['message' => $error], ERROR_INVALID_INPUT);
+            return false;
         }
     }
 }

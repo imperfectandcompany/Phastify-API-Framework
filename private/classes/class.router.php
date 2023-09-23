@@ -277,6 +277,7 @@ class Router {
         // If no route is found, handle the error
         $this->handleError("Route with URI '$url' not found.");
         }
+
     }
 
     // Handle errors in development mode by displaying a message and error code
