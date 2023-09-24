@@ -3,18 +3,61 @@
 sep18
 https://v2.api.postogon.com/list-routes
 
-## Creating and Running Tests:
+# Creating and Running Tests:
+This section introduces the test runner for the application, offering a systematic approach to validate features using a series of defined tests.
 
-### 1. Overview
-This guide introduces the test runner for the application. It provides a systematic approach to validate features using a series of defined tests. 
+**Enhancements**:
+- Introduced `TestDouble` to provide mocking capabilities for the input stream (simulating post body request), enabling more granular control during testing.
+- Enhanced the `TestRunner` class to support categorized test execution and display comprehensive metrics post-test run
+- Integrated additional tests to validate post and comment functionalities.
 
-### 2. Prerequisites
-- Ensure you have included all necessary files in your test script.
+**Fixes**:
+- Resolved issues related to global state by introducing cleanup mechanisms post-test.
+- Refined error-handling mechanisms to capture both PHP `Error` and `Exception` objects.
+
+## Table of Contents
+- [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [Setting Up the Test Environment](#setting-up-the-test-environment)
+- [Writing Tests](#writing-tests)
+- [Grouping Tests](#grouping-tests)
+- [Running Tests](#running-tests)
+- [Understanding TestDouble](#understanding-testdouble)
+- [Test Cleanup & Integrity](#test-cleanup--integrity)
+- [Debugging](#debugging)
+- [Reporting](#reporting)
+- [Delving Deeper: Writing Functions with Meaningful Feedback](#delving-deeper-writing-functions-with-meaningful-feedback)
+- [Conclusion](#conclusion)
+
+## Glossary
+**Group Tests**: Group tests based on functionality, and specify which controller they belong to.
+**Execute Tests**: The TestRunner is now initialized with all controllers. When running tests, it refers to the specified controller for each test group.
+**Initialization of Controllers**: A key-value mapping of controller names to their initialized objects is established.
+**Objective**: When implementing a new test, it's crucial to focus on the objective: validating specific functionalities within the application.
+
+
+## Quick Start
+1. Create Controller object with $dbConnection passed in for testing.
+2. Define the test function, taking into account the $objectUnderTest to access controller methods.
+3. Use the customAssert function to validate outcomes.
+4. Add the test name to the relevant test group.
+5. Ensure the test group is associated with the right controller in the $tests array.
+6. ???
+7. profit
+8. $$$$$$$$
+<a name="overview"></a>
+
+## 1. Overview
+This enhanced testing setup provides a robust environment to validate multiple aspects of the application across various controllers. By understanding the mechanics of accessing controllers, their underlying classes, and the strategic use of TestDouble, we can craft precise, effective tests. The structure also simplifies the addition of new test cases, making maintenance and expansion streamlined.
+
+<a name="prerequisites"></a>
+## 2. Prerequisites
+- Ensure you've included all necessary files in your test script.
 - Familiarity with the application's logic and functionalities.
 
-### 3. Setting up the Test Environment
-
-Before writing or running tests, make sure you have set up the testing environment:
+<a name="setting-up-the-test-environment"></a>
+## 3. Setting Up the Test Environment
+Ensure your test environment is ready:
 
 ```php
 include_once($GLOBALS['config']['private_folder'].'/tests/test_case.php');
@@ -22,10 +65,18 @@ include_once($GLOBALS['config']['private_folder'].'/controllers/{ControllerBeing
 include_once($GLOBALS['config']['private_folder'].'/classes/class.testRunner.php');
 
 ${ControllerBeingTested} = new {ControllerBeingTested}Controller($dbConnection);
-```
 
-### 4. Writing Tests
-Tests are simple PHP functions. Here's how you define one:
+// Initialize the Controller object once
+$controllers = [
+	'post' => new PostController($dbConnection),
+	'comments' => new CommentController($dbConnection),
+	'integrations' => new IntegrationControllerTestDouble($dbConnection)
+	// ..etc
+];
+```
+<a name="writing-tests"></a>
+## 4. Writing Tests
+Tests are simple PHP functions. Here's how to define one:
 
 ```php
 function testName($objectUnderTest) {
@@ -34,12 +85,43 @@ function testName($objectUnderTest) {
     customAssert(/* condition */, "Error Message if condition fails");
 }
 ```
-Tips:
-Make test names descriptive. E.g., **testCanViewOwnPublicPost**.
-Use **customAssert** to verify the logic. If the condition is false, the test will fail.
 
-### 5. Grouping Tests
-Group tests into categories for better organization
+To access methods within the controller being tested, use the $objectUnderTest argument. This argument contains the initialized instance of the controller, enabling direct access to its methods.
+
+For instance, if testing the PostController:
+```
+php
+function testCanViewOwnPublicPost($objectUnderTest) {
+    $result = $objectUnderTest->viewPublicPost($postId);
+    customAssert($result, "Failed to view own public post.");
+}
+```
+#### Accessing the Underlying Class
+Controllers often utilize underlying classes to handle specific tasks. In this framework, the test environment makes these classes accessible through the controller instance.
+
+For example, if **PostController** uses a class named **PostHandler**, it's possible to call its methods:
+
+```
+php
+function anotherTestExample($objectUnderTest) {
+    $handlerResult = $objectUnderTest->PostHandler->specificMethod();
+    customAssert($handlerResult, "Specific method failed.");
+}
+```
+
+#### Understanding getInputStream and Simulating Post Body
+During testing, we need to simulate post body requests. To achieve this, functions call getInputStream, allowing us to mock or replace actual HTTP post body data with predefined testing data.
+
+
+**Tips**:
+- Make test names descriptive.
+	- E.g., **testCanViewOwnPublicPost**.
+- Use **customAssert** to verify the logic.
+	- If the condition is false, the test will fail.
+
+<a name="grouping-tests"></a>
+## 5. Grouping Tests
+Group tests into categories for better organization:
 
 ```php
 $testCannotViewOwnPosts = [
@@ -57,47 +139,99 @@ Now define all your test categories:
 
 ```php
 $tests = [
-    "Can View Own Posts" => $testCanViewOwnPosts,
-    "Cannot View Own Posts" => $testCannotViewOwnPosts,
-    "Can View Others' Posts" => $testCanViewOthersPosts,
-    "Cannot View Others' Posts" => $testCannotViewOthersPosts
+                "Can View Own Posts" => ['controller' => 'post', 'tests' => $testCanViewOwnPosts],
+                "Cannot View Own Posts" => ['controller' => 'post', 'tests' => $testCannotViewOwnPosts],
+                "Can View Others' Posts" => ['controller' => 'post', 'tests' => $testCanViewOthersPosts],
+                "Cannot View Others' Posts" => ['controller' => 'post', 'tests' => $testCannotViewOthersPosts],
 ];
 ```
 
-### 6. Running Tests
-Use the TestRunner class to execute the tests:
+<a name="running-tests"></a>
+## 6. Running Tests
+Use the TestRunner class to execute tests:
 
 ```php
-$runner = new TestRunner(${ControllerBeingTested});
+$runner = new TestRunner($Controllers);
 $runner->runTests($tests);
 ```
-### 7. Debugging
-If a test is failing, or you're encountering unexpected behaviors, follow these steps:
+This class ensures each test is run and provides a summary of the results.
 
-1. **Isolate the Issue:** Comment out other tests and only run the problematic test.
-2. **Print Debug Information:**
-- Within the application logic, you can use the global **$currentTest** variable to conditionally print information.
+<a name="understanding-testdouble"></a>
+## 7. Understanding TestDouble
+The test infrastructure uses the TestDouble pattern, which is a general strategy for replacing specific components of a system for testing purposes. Hence, controllers used in testing have names ending in "TestDouble" (e.g., CommentControllerTestDouble), making it clear that they are stand-ins or substitutes for the real controllers during testing.
 
+Sometimes, for testing, we need to mimic the behavior of the production controller but with controlled, predictable outputs. This ensures that external factors don't interfere with our tests.
+
+In cases where tests don't require simulation of a post body request, we directly use the actual controllers. For example, with PostController.
+
+**By using the TestDouble pattern**:
+
+We can avoid unintended side effects, such as database writes, while testing.
+It allows for specific behaviors to be mocked, helping isolate the functionalities being tested.
+
+**This pattern pattern ensures controlled, predictable outputs during testing**:
+- Avoids unintended side effects.
+- Mocks specific behaviors.
+	- Introduced to simulate post requests within production method
+
+To mock certain behaviors for testing purposes, create a class in the `/tests/controller/` following the Production Controller file name  with `TestDouble` class appended to the end before `.php`. This class will be used to extend the original `{Production}Controller` but has the added capability to override the input stream. Don't forget to include the controller we are extending.
+
+#### Usage:
+
+1. Set the mock input:
+    ```php
+    CommentControllerTestDouble::setInputStream(json_encode(['comment' => 'Mocked comment']));
+    ```
+
+2. Reset the mock input:
+    ```php
+    CommentControllerTestDouble::setInputStream('php://input');
+    ```
+
+<a name="test-cleanup--integrity"></a>
+## 8. Test Cleanup & Integrity
+
+Our testing strategy emphasizes cleaning up and ensuring a consistent state before and after tests. The testRunner takes care of this by:
+- Resetting the user ID.
+- Restoring global state changes.
+- Maintaining data integrity with separate databases (coming soon)
+
+When we mock the post body, it's essential to reset it within the test or function after use, ensuring no unexpected side-effects in subsequent tests.
+
+<a name="debugging"></a>
+## 9. Debugging
+Our application works with relational data involving entities like posts, users, and contact relationships. Currently, this data is accurate and resides in our primary database. A separate testing database is in our future plans to ensure data integrity and further decouple testing from production.
+
+When we mock the post body (using TestDouble), it's essential to reset it within the test or function after use, ensuring no unexpected side-effects in subsequent tests.
+
+Follow these steps when facing issues:
+
+1. Isolate the Issue
+	- Comment out other tests and only run the problematic test.
+2. Print Debug Information
+	- Within the application logic, you can use the global **$currentTest** variable to conditionally print information.
+
+	```php
+	global $currentTest;
+	if ($currentTest === 'specificTestName'){
+		echo "Debugging info here";
+	}
+	```
+3. Check Error Message
+	- The test runner will display a clear error message if a test fails.
+
+**throwWarning**: This method logs a warning message. It's particularly useful for conditions that might need attention but don't necessarily indicate a failure. For example, when a post is private but still accessible by a user, it throws a warning:
+  
 ```php
-global $currentTest;
-if ($currentTest === 'specificTestName'){
-    echo "Debugging info here";
-}
+throwWarning("Post is private");
 ```
-3. **Check Error Message:** The test runner will display a clear error message if a test fails.
 
-### 8. Reporting
-After all tests run, a summary is displayed showing the number of passed and failed tests, along with other metrics. More details on that can be found in the **Delving Deeper** section.
+- **throwError**: Similar to **throwWarning**, but used for more critical issues that indicate a test failure.
 
-### 9. Cleanup
-Once you're done testing, the runner will automatically reset global settings used during the testing phase.
+When using throwWarning within tests or application logic, it automatically logs the file and line number where the warning was thrown. This information is invaluable when trying to understand the context or source of a particular warning.
 
-### Conclusion
-Automated testing provides an efficient way to ensure the application works as expected. By following this guide, you can easily add more tests and maintain a robust, error-free application.
-
-## Delving Deeper: Writing Functions with Meaningful Feedback for Tests
-
-### Understanding the `canViewPost` Function
+Here is an example within our code:
+#### Understanding the `canViewPost` Function
 
 The `canViewPost` function is crucial as it checks whether a given user can view a specific post. Here's its signature:
 
@@ -116,17 +250,26 @@ Within this function, there are numerous conditions that dictate if a user has t
 
 Both methods include contextual information from where they were invoked, such as the file and line number. This aids in debugging, especially when tests fail.
 
-### Custom Feedback Mechanisms
+For consistency and predictability, we also ensure that every conditional path in our controllers returns true or false for our **customAssert** function. Right before these returns, we call our sendResponse function, ensuring feedback is sent to the client or caller.
 
-- **throwWarning**: This method logs a warning message. It's particularly useful for conditions that might need attention but don't necessarily indicate a failure. For example, when a post is private but still accessible by a user, it throws a warning:
-  
-```php
-throwWarning("Post is private");
-```
+*If the functions being used do not include this, you will experience issues with assertion.
+*
+<a name="reporting"></a>
+## 10. Reporting
+After tests, a summary displays metrics:
+- Passed and failed tests.
+- See the Delving Deeper section for more.
 
-- **throwError**: Similar to **throwWarning**, but used for more critical issues that indicate a test failure.
+<a name="delving-deeper-writing-functions-with-meaningful-feedback"></a>
+## 11. Delving Deeper: Writing Functions with Meaningful Feedback
+A deeper look into specific functions and feedback mechanisms:
+- Understand the canViewPost function.
+- Utilize custom methods like throwWarning.
 
-When using throwWarning within tests or application logic, it automatically logs the file and line number where the warning was thrown. This information is invaluable when trying to understand the context or source of a particular warning.
+<a name="conclusion"></a>
+## 12. Conclusion
+Automated testing ensures that the application works seamlessly. By understanding various mechanics and strategies, you can craft precise, effective tests and maintain the robust application. This guide is structured to cover every aspect of the testing process, ensuring clarity, coherence, and comprehensiveness. Following this guide will assist in creating, running, and maintaining tests effectively.
+
 
 ## Router Class Enhancements
 
