@@ -3,8 +3,7 @@ include_once($GLOBALS['config']['private_folder'].'/classes/class.comments.php')
 include_once($GLOBALS['config']['private_folder'].'/controllers/PostController.php');
 include_once($GLOBALS['config']['private_folder'].'/classes/class.post.php');
 
-
-    class Commentcontroller {
+    class CommentController {
         
         protected $dbConnection;
 
@@ -25,7 +24,7 @@ include_once($GLOBALS['config']['private_folder'].'/classes/class.post.php');
     
             if ($postOwner === false) {
                 sendResponse('error', ['message' => 'Post not found'], ERROR_NOT_FOUND);
-                return;
+                return false;
             }
 
             if ($postOwner === $userId || $this->postController->canViewPost($id, $userId)) {
@@ -34,54 +33,62 @@ include_once($GLOBALS['config']['private_folder'].'/classes/class.post.php');
                     sendResponse('success', $result, SUCCESS_OK);
                 } else {
                     sendResponse('error', ['message' => 'Post comments not found'], ERROR_NOT_FOUND);
+                    return false;
                 }
             } else {
-            return sendResponse('error', ['message' => 'Unauthorized to view the post comments.'], ERROR_FORBIDDEN);
+            sendResponse('error', ['message' => 'Unauthorized to view the post comments.'], ERROR_FORBIDDEN);
+            return false;
             }
         }
        
-        // Create a Comment on a Post
         public function createPostComment(int $id) {
             $userId = $GLOBALS['user_id'];
             $post = new Post($this->dbConnection);
             $postOwner = $post->getPostOwner($id);
-
-            // Check if the post was not found
+            
             if ($postOwner === false) {
                 sendResponse('error', ['message' => 'Post not found'], ERROR_NOT_FOUND);
-                return;
+                return false;
             }
 
-            // Check if the user is the post owner or has permission to view the post
-            if ($postOwner === $userId || $this->postController->canViewPost($id, $userId)) {
-                // Parse JSON input from the request body
-                $postBody = json_decode(file_get_contents("php://input"));
+            if ($this->postController->canViewPost($id, $userId)) {
 
+                $postBody = json_decode(static::getInputStream());
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    echo json_last_error_msg();
+                }
+
+                if ($postBody === null || !isset($postBody->comment) || empty(trim($postBody->comment))) {
+                    sendResponse('error', ['message' => 'Comment cannot be empty'], ERROR_BAD_REQUEST);
+                    return;
+                }
+                
                 try {
-                    // Check if the 'comment' field is present in the request body
+                    // I've assumed that CheckInputFields throws an exception if 'comment' isn't set
                     CheckInputFields(['comment'], $postBody);
-
-                    // Post the comment
+        
                     $result = $this->comments->postComment($id, $postBody);
-
                     if ($result) {
-                        // Return success response
-                        echo json_encode(['status' => 'success', 'message' => 'Comment created']);
-                        http_response_code(SUCCESS_CREATED);
+                        sendResponse('success', ['message' => 'Comment created'], SUCCESS_CREATED);
+                        return true;
                     } else {
                         throw new Exception('Unable to create comment', ERROR_INTERNAL_SERVER);
                     }
                 } catch (Exception $e) {
-                    // Handle and report exceptions
-                    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
-                    http_response_code($e->getCode() ?: ERROR_BAD_REQUEST);
+                    sendResponse('error', ['message' => 'Comment created'], ERROR_BAD_REQUEST);
+                    return false;
                 }
             } else {
-                // User is not authorized to view the post
                 sendResponse('error', ['message' => 'Unauthorized to create comment on the post'], ERROR_FORBIDDEN);
+                return false;
             }
         }
-
+        
+        
+        protected static function getInputStream()
+        {
+            return file_get_contents('php://input');
+        }
 
         // Delete a comment
         public function deleteComment(int $id) {

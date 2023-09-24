@@ -160,7 +160,14 @@
             if ($postToWhom === TO_WHOM_PUBLIC) {
                 throwWarning("Post is public");
                 return true; // Public post, anyone can view
-            } 
+            }
+
+            if ($postToWhom === TO_WHOM_SOFT_DELETE || !in_array($postToWhom, [1, 2, 3, 4])) {
+                throwError("Post is not public, private, or archived.");
+                throwWarning("to_whom value: " . $postToWhom . " is not viewable.");
+                throwError("Post is soft deleted or invalid to_whom value");
+                return false;
+            }
 
             $postOwner = $this->post->getPostOwner($postId);
             
@@ -188,12 +195,7 @@
                 return false; // User cannot view archived post since they don't own it
             }
 
-            if ($postToWhom === TO_WHOM_SOFT_DELETE) {
-                return false;
-            }
-
-            throwError("Post is not public, private, or archived.");
-            throwError("No user-level permission to view regardless of relationship with post.");
+            throwError("Internal error: No user-level permission to view regardless of relationship with post.");
             return false;
         }
 

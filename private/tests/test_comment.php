@@ -59,11 +59,6 @@ Not contact of user ID 15
 Not a contact of user ID 13
 */
 
-function setPhpInputStream($data) {
-    file_put_contents('php://temp', $data);
-    rewind('php://temp');
-}
-
 function testValidCommentCreation($commentController) {
     $GLOBALS['user_id'] = 13;
     $data = (object)['comment' => 'This is a valid comment'];
@@ -125,11 +120,19 @@ function testOwnerCanCommentOnTheirPost($commentController) {
 
     // Test: A user should not be able to comment on a post they own that is soft deleted
     function testCannotCommentOwnUnauthorizedPost($commentController) {
-        // Given: Post 256's to_whom column is 5 (soft delete) and belongs to user ID 12
-        $data = (object)array("comment" => "This comment should not be added");
-        $result = $commentController->comments->postComment(256, $data);
+
+        // Given: Post 256 is soft deleted and authored by user ID 12
+        $commentController::setInputStream(json_encode(['comment' => 'This comment should fail']));
+    
+        // Test the comment creation method
+        $result = $commentController->createPostComment(256);
+
+        // Reset the input stream
+        $commentController::setInputStream('php://input');
+    
         customAssert($result === false, 'User should not be able to comment on this post despite being the owner');
     }
+    
 
     // Test: A user should be able to comment on another person's public post as a contact
     function testCanCommentPublicPostAsContact($commentController) {
@@ -155,18 +158,9 @@ function testOwnerCanCommentOnTheirPost($commentController) {
         // Note: User ID 13 is not a contact of user ID 42
         $GLOBALS['user_id'] = 13;
     
-        $testData = json_encode(["comment" => "This comment should fail"]);
-        $GLOBALS["php://input"] = new MockInputStreamsWrapper($testData);
+        $result = $commentController->createPostComment(193);
     
-        // Capture the output
-        ob_start();
-        $commentController->createPostComment(193);
-        $output = ob_get_clean();
-    
-        $decodedOutput = json_decode($output, true);
-        $status = $decodedOutput['status'] ?? null;
-    
-        customAssert($status === 'error', 'User should not be able to comment on the private post without being a contact');
+        customAssert($result === false, 'User should not be able to comment on the private post without being a contact');
     }
 
     // Test: A user should be able to comment on another person's private post as a contact

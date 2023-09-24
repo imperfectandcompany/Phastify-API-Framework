@@ -273,7 +273,9 @@ $GLOBALS['config']['testmode'] = 0; //This disables testing
 //dispatch router since authentication and global variables are set!
 $router->dispatch($GLOBALS['url_loc'], $dbConnection, $GLOBALS['config']['devmode']);
 $GLOBALS['config']['testmode'] = 1; //This enables testing
-
+if($GLOBALS['config']['devmode'] == 1){
+    include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');  
+}
 // Check if we're in devmode
 if ($GLOBALS['config']['devmode'] && $GLOBALS['config']['testmode']) {
     // Run testing script
@@ -293,9 +295,7 @@ if ($GLOBALS['config']['devmode'] && $GLOBALS['config']['testmode']) {
 //    default:
 //        break;
 //}
-if($GLOBALS['config']['devmode'] == 1){
-    include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');  
-}
+
 
 
 // unset token to prevent accidental use

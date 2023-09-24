@@ -4,7 +4,6 @@ class TestRunner
     private $controllers;
     private $failed = false;
     private $currentFailed = false;
-
     private $metrics = [
         'passed' => 0,
         'failed' => 0,
@@ -89,12 +88,16 @@ class TestRunner
             die("Stopping due to failed tests.");
         }
     }
-
     private function cleanup()
     {
         $GLOBALS['config']['testmode'] = 0;
         $GLOBALS['logs'][] = [];
         $GLOBALS['currentTest'] = null;
+    }
+
+    private function testCleanup()
+    {
+        $GLOBALS['user_id'] = 12;
     }
 
     private function runTest($testName, $controller)
@@ -110,6 +113,9 @@ class TestRunner
                 {
                     throw new Exception($e->getMessage());
                 }
+                finally{
+                    $this->testCleanup();
+                }
             echo "<span class='passed'>PASSED</span>";
             $this->metrics['passed']++;
         } catch (Exception $e) {
@@ -123,6 +129,9 @@ class TestRunner
             if (isset($GLOBALS['logs'][$testName])) {
                 display_feedback($GLOBALS['logs'][$testName]);
             }
+        }
+        finally {
+            $this->testCleanup();
         }
         echo "</div>"; // End of the test div
     }

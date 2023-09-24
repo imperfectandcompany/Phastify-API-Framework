@@ -2,22 +2,14 @@
             include_once($GLOBALS['config']['private_folder'].'/tests/test_post.php');
             include_once($GLOBALS['config']['private_folder'].'/tests/test_comment.php');
             include_once($GLOBALS['config']['private_folder'].'/controllers/PostController.php');
-            include_once($GLOBALS['config']['private_folder'].'/controllers/CommentController.php');
+            include_once($GLOBALS['config']['private_folder'].'/controllers/CommentControllerTestDouble.php');
             include_once($GLOBALS['config']['private_folder'].'/classes/class.testRunner.php');
-            include_once('MockInputStreamsWrapper.php');
-
 
             // Initialize the PostController object once
             $controllers = [
                 'post' => new PostController($dbConnection),
-                'comments' => new CommentController($dbConnection)
+                'comments' => new CommentControllerTestDouble($dbConnection)
             ];
-
-            stream_wrapper_unregister("php");
-            stream_wrapper_register("php", "MockInputStreamsWrapper")
-                or die("Failed to register protocol");
-
-
             
             function customAssert($condition, $message) {
                 global $currentTest;
@@ -66,13 +58,6 @@
                 "testCanCommentPublicPostAsNoContact",
                 "testCannotCommentPrivatePostAsNoContact",
                 "testCanCommentPrivatePostAsContact"
-
-
-
-
-                
-
-
             ];
 
             $tests = [
@@ -83,12 +68,9 @@
                 "Post Helper Functions" => ['controller' => 'post', 'tests' => $testDeveloperTestPosts],
                 "Can User comment" => ['controller' => 'comments', 'tests' => $testUserComment]
             ];
-
             
             $runner = new TestRunner($controllers);
             $runner->runTests($tests);
-            stream_wrapper_restore('php');
-            $GLOBALS['user_id'] = 12;
 
             unset($post);
             unset($comments);
