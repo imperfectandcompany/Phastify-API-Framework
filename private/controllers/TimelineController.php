@@ -5,10 +5,13 @@ include($GLOBALS['config']['private_folder'].'/classes/class.timeline.php');
 class TimelineController {
     
     protected $dbConnection;
+    protected $logger;
 
-    public function __construct($dbConnection)
+    public function __construct($dbConnection, $logger)
     {
         $this->dbConnection = $dbConnection;
+        $this->logger = $logger;
+
     }
 
     public function fetchPublicTimeline()

@@ -6,14 +6,16 @@ include_once($GLOBALS['config']['private_folder'].'/classes/class.post.php');
     class CommentController {
         
         protected $dbConnection;
+        protected $logger;
 
-        public function __construct($dbConnection)
+        public function __construct($dbConnection, $logger)
         {
             $this->dbConnection = $dbConnection;
             $comments = new Comments($this->dbConnection);
             $this->comments = $comments;
             $PostController = new PostController($this->dbConnection);
             $this->postController = $PostController;
+            $this->logger = $logger;
         }
         
         // Retrieve Comments for a Post

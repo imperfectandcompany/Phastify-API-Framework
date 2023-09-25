@@ -4,20 +4,24 @@
     class IntegrationController {
         
         protected $dbConnection;
+        protected $integration;
+        protected $logger;
 
-        public function __construct($dbConnection)
+        public function __construct($dbConnection, $logger)
         {
             $this->dbConnection = $dbConnection;
+            $integration = new Integration($this->dbConnection);
+            $this->integration = $integration;
+            $this->logger = $logger;
         }
         
         public function getAllIntegrations() {
-            $integration = new Integration($this->dbConnection);
-            $integrations = $integration->getIntegrationsByUserId($GLOBALS['user_id']);
+            $integrations = $this->integration->getIntegrationsByUserId($GLOBALS['user_id']);
             sendResponse('success', ['integrations' => $integrations], SUCCESS_OK);
         }
         
         public function getIntegration($id) {
-            $integration = new Integration($this->dbConnection);
+            $integration = $this->integration;
 
             // Check if integration exists before authorization check.
             if (!$integration->doesIntegrationExist($id)) {
@@ -36,12 +40,12 @@
         }
 
         public function createIntegration() {
+            $integration = $this->integration;
+
             try {
                 $postBody = json_decode(file_get_contents("php://input"));
                 CheckInputFields(['service', 'client_id', 'client_secret', 'access_token', 'token_type'], $postBody);
 
-        
-                $integration = new Integration($this->dbConnection);
                 $result = $integration->createIntegrationForUser($GLOBALS['user_id'], $postBody);
         
                 if ($result) {
@@ -59,7 +63,7 @@
         public function updateIntegration($id) {
             $postBody = json_decode(file_get_contents("php://input"));
 
-            $integration = new Integration($this->dbConnection);
+            $integration = $this->integration;
 
             // Check if integration exists before authorization check.
             if (!$integration->doesIntegrationExist($id)) {
@@ -82,7 +86,7 @@
         }
         
         public function deleteIntegration($id) {
-            $integration = new Integration($this->dbConnection);
+            $integration = $this->integration;
 
             // Check if integration exists before authorization check.
             if (!$integration->doesIntegrationExist($id)) {
@@ -106,7 +110,7 @@
         }
         
         public function refreshIntegrationData($id) {
-            $integration = new Integration($this->dbConnection);
+            $integration = $this->integration;
 
             // The logic for refreshing data might be complex, involving third-party APIs. This is WIP.
 

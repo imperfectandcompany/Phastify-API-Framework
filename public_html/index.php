@@ -1,7 +1,12 @@
 <?php
+
 include '../private/config.php';
+
 // set timezone
 date_default_timezone_set($GLOBALS['config']['timezone']);
+
+
+
 // start output buffering
 if(!ob_start("ob_gzhandler")) ob_start();
 // start session
@@ -17,11 +22,29 @@ include($GLOBALS['config']['private_folder'].'/functions/functions.general.php')
 include($GLOBALS['config']['private_folder'].'/functions/functions.json.php');
 include($GLOBALS['config']['private_folder'].'/functions/functions.database.php');
 include($GLOBALS['config']['private_folder'].'/constants.php');
+include($GLOBALS['config']['private_folder'].'/constants/localization_manager.php');
+
 
 // include the necessary files and create a database connection object
 require_once $GLOBALS['config']['private_folder'].'/classes/class.database.php';
 require_once $GLOBALS['config']['private_folder'].'/classes/class.user.php';
 require_once $GLOBALS['config']['private_folder'].'/classes/class.dev.php';
+require_once($GLOBALS['config']['private_folder'] . '/classes/class.localizationCache.php');
+
+// Create a cache instance
+$cache = new LocalizationCache();
+
+// Initialize LocalizationManager with the cache
+$localizationManager = new LocalizationManager(
+    $GLOBALS['config']['private_folder'] . "/constants",
+    $GLOBALS['config']['devmode'] ? 'dev' : 'prod',
+    'en_US',
+    $cache
+);
+
+$localizationManager->initialize();
+
+//include($GLOBALS['config']['private_folder'].'/structures/create_constants_structure.php');
 
 // set up database connection
 $dbConnection = new DatabaseConnector(
@@ -32,6 +55,7 @@ $dbConnection = new DatabaseConnector(
     $GLOBALS['db_conf']['db_pass'],
     $GLOBALS['db_conf']['db_charset']
 );
+
 
 require_once $GLOBALS['config']['private_folder'].'/classes/class.router.php';
 
@@ -49,6 +73,26 @@ $result = authenticate_user($token, $dbConnection);
     $devMode = new Dev($dbConnection);
     $GLOBALS['config']['devmode'] = $devMode->getDevModeStatus();
 
+
+
+    // // Create a cache instance
+    // $cache = new LocalizationCache();
+
+    // // Initialize LocalizationManager with the cache
+    // $localizationManager = new LocalizationManager(
+    //     $GLOBALS['config']['private_folder'] . "/constants",
+    //     $GLOBALS['config']['devmode'] ? 'dev' : 'prod',
+    //     'en_US',
+    //     $cache
+    // );
+    
+    // $message = $localizationManager->getLocalizedString('ERROR_LOGIN_FAILED');
+    
+    // echo $message;
+    // echo "afwefw;";
+    
+
+
 // handle case where user is not authenticated
 if ($result['status'] === 'error') {
     
@@ -58,6 +102,7 @@ if ($result['status'] === 'error') {
     if($GLOBALS['config']['devmode'] == 1){
         include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');  
     }
+
 
     // add the non-authenticated routes to the router
     $notAuthenticatedRouter->add('/register', 'UserController@register', 'POST');
@@ -77,7 +122,7 @@ if ($result['status'] === 'error') {
     }
     
     // dispatch the request to the appropriate controller
-    $notAuthenticatedRouter->dispatch($GLOBALS['url_loc'], $dbConnection, $GLOBALS['config']['devmode']);
+    $notAuthenticatedRouter->dispatch($GLOBALS['url_loc'], $dbConnection, 1);
     exit();
 }
 
@@ -145,6 +190,14 @@ $router->addDocumentation('/integrations', 'POST', 'Creates a new integration fo
 $router->add('/integrations/:id', 'IntegrationController@updateIntegration', 'PUT', [
     'service' => 'body',   // Service comes from the request body
 ]);
+
+// Delete an existing integration for the authenticated user
+$router->add('/integrations/:id', 'IntegrationController@deleteIntegration', 'DELETE');
+$router->addDocumentation('/integrations/:id', 'DELETE', 'Deletes an existing integration for the authenticated user.');
+
+// Refresh the data for an integration for the authenticated user
+$router->add('/integrations/:id/refresh', 'IntegrationController@refreshIntegrationData', 'POST');
+$router->addDocumentation('/integrations/:id/refresh', 'POST', 'Refreshes the data for an integration for the authenticated user.');
 
 // Add documentation to route
 $router->addDocumentation('/integrations/:id', 'PUT', 'Updates an existing integration for the authenticated user.');
@@ -231,13 +284,6 @@ $router->enforceParameters('/post/:id/comment', 'POST', [
 $router->add('/comment/:id', 'CommentController@deleteComment', 'DELETE');
 $router->addDocumentation('/comment/:id', 'DELETE', 'Deletes a comment.');
 
-// Delete an existing integration for the authenticated user
-$router->add('/integrations/:id', 'IntegrationController@deleteIntegration', 'DELETE');
-$router->addDocumentation('/integrations/:id', 'DELETE', 'Deletes an existing integration for the authenticated user.');
-
-// Refresh the data for an integration for the authenticated user
-$router->add('/integrations/:id/refresh', 'IntegrationController@refreshIntegrationData', 'POST');
-$router->addDocumentation('/integrations/:id/refresh', 'POST', 'Refreshes the data for an integration for the authenticated user.');
 
 //POST /logout
 //Description: Logs out the user from the current device and invalidates the token unless all_devices is passed as true, in which case, the user is logged out from all devices, and all tokens are invalidated.
@@ -267,6 +313,8 @@ $router->add('/logout/:deviceToken/:param2/:optionalParam', 'UserController@theO
 
 if($GLOBALS['config']['devmode'] == 1){
     $router->add('/list-routes', 'DevController@listRoutes', 'GET');
+
+    // TODO: LIST CONSTANTS ENDPOINT
 }
 $GLOBALS['config']['testmode'] = 0; //This disables testing
 
@@ -295,8 +343,6 @@ if ($GLOBALS['config']['devmode'] && $GLOBALS['config']['testmode']) {
 //    default:
 //        break;
 //}
-
-
 
 // unset token to prevent accidental use
 unset($token);

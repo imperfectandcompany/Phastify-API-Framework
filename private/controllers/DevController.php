@@ -4,11 +4,13 @@ class DevController {
         
     protected $dbConnection;
     protected $router;
+    protected $logger;
 
-    public function __construct($dbConnection, $router)
+    public function __construct($dbConnection, $router, $logger)
     {
         $this->dbConnection = $dbConnection;
         $this->router = $router;
+        $this->logger = $logger;
     }
     
     public function getDevMode() {

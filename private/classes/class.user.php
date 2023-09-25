@@ -35,6 +35,27 @@ class User {
             return false;
         }
     }
+
+    private function generateAndAssociateToken($uid, $deviceInfo) {
+        // Implement logic to generate and associate a token with the user and device
+        try {
+            $token = generateNewToken(); // Implement this function to generate a unique token
+            
+            if ($token) {
+                $query = "INSERT INTO login_tokens (token, user_id, device_name, expiration_time) 
+                          VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 DAY))";
+                $params = [$token, $uid, $deviceInfo['device_name']];
+                $this->dbObject->query($query, $params);
+                return $token;
+            }
+            
+            return false;
+        } catch (Exception $e) {
+            // Handle unexpected exceptions and log them
+            $this->logger->log(0, 'token_generation_error', ['error_message' => $e->getMessage()]);
+            return false;
+        }
+    }
     
     public function getPasswordFromEmail($email) {
         $table = 'users';
@@ -128,17 +149,16 @@ class User {
      *
      * @return string|false Returns the newly generated token if it was set successfully, or false otherwise
      */
-    public function setToken($uid) {
+    public function setToken($uid, $deviceId) {
         // Generate a token
         $cstrong = True;
         $token = bin2hex(openssl_random_pseudo_bytes(64, $cstrong));
 
         // Hash the token for security
         $token_hash = sha1($token);
-
         // Prepare the SQL statement to insert a new record with the user ID and hashed token
-        $rows = 'user_id, token';
-        $values = '?, ?';
+        $rows = 'user_id, token, device_id';
+        $values = '?, ?, device_id';
         $paramValues = array($uid, $token_hash);
         $filterParams = makeFilterParams($paramValues);
         $result = $this->dbObject->insertData('login_tokens', $rows, $values, $filterParams);

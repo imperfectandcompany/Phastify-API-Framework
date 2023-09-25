@@ -1,14 +1,17 @@
 <?php            
             include_once($GLOBALS['config']['private_folder'].'/tests/test_post.php');
             include_once($GLOBALS['config']['private_folder'].'/tests/test_comment.php');
+            include_once($GLOBALS['config']['private_folder'].'/tests/test_integration.php');
             include_once($GLOBALS['config']['private_folder'].'/controllers/PostController.php');
-            include_once($GLOBALS['config']['private_folder'].'/controllers/CommentControllerTestDouble.php');
+            include_once($GLOBALS['config']['private_folder'].'/tests/controllers/CommentControllerTestDouble.php');
+            include_once($GLOBALS['config']['private_folder'].'/tests/controllers/IntegrationControllerTestDouble.php');
             include_once($GLOBALS['config']['private_folder'].'/classes/class.testRunner.php');
 
-            // Initialize the PostController object once
+            // Initialize the Controller object once
             $controllers = [
                 'post' => new PostController($dbConnection),
-                'comments' => new CommentControllerTestDouble($dbConnection)
+                'comments' => new CommentControllerTestDouble($dbConnection),
+                'integrations' => new IntegrationControllerTestDouble($dbConnection)
             ];
             
             function customAssert($condition, $message) {
@@ -60,13 +63,18 @@
                 "testCanCommentPrivatePostAsContact"
             ];
 
+            $testIntegration = [
+                "testUserCanUpdateIntegrationAfterAddingService"
+            ];
+
             $tests = [
                 "Can View Own Posts" => ['controller' => 'post', 'tests' => $testCanViewOwnPosts],
                 "Cannot View Own Posts" => ['controller' => 'post', 'tests' => $testCannotViewOwnPosts],
                 "Can View Others' Posts" => ['controller' => 'post', 'tests' => $testCanViewOthersPosts],
                 "Cannot View Others' Posts" => ['controller' => 'post', 'tests' => $testCannotViewOthersPosts],
                 "Post Helper Functions" => ['controller' => 'post', 'tests' => $testDeveloperTestPosts],
-                "Can User comment" => ['controller' => 'comments', 'tests' => $testUserComment]
+                "Can User comment" => ['controller' => 'comments', 'tests' => $testUserComment],
+                "Integration" => ['controller' => 'integrations', 'tests' => $testIntegration]
             ];
             
             $runner = new TestRunner($controllers);

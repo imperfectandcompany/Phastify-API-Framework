@@ -3,10 +3,12 @@
     class ProfileController {
         
         protected $dbConnection;
+        protected $logger;
 
-        public function __construct($dbConnection)
+        public function __construct($dbConnection, $logger)
         {
             $this->dbConnection = $dbConnection;
+            $this->logger = $logger;
         }
         
         public function showAvatar(int $user_id = null){

@@ -1,14 +1,20 @@
 <?php
 // Includes
 include($GLOBALS['config']['private_folder'].'/classes/class.timeline.php');
+include($GLOBALS['config']['private_folder'].'/classes/class.device.php');
 
+/**
+ * UserController handles user authentication.
+ */
 class UserController {
     
     protected $dbConnection;
+    protected $logger;
 
-    public function __construct($dbConnection)
+    public function __construct($dbConnection, $logger)
     {
         $this->dbConnection = $dbConnection;
+        $this->logger = $logger;
     }
 
     /**
@@ -75,7 +81,17 @@ class UserController {
         }
     }
     
+    /**
+     * Authenticate a user.
+     *
+     * @throws Exception If an unexpected error occurs.
+     */    
     public function authenticate() {
+        // Log the start of the authentication process
+        $this->logger->log(0, 'authentication_start', $_SERVER);
+        $username = false;
+        $email = false;
+        try {
         // Parse the request body
         $postBody = json_decode(file_get_contents("php://input"));
 
@@ -91,43 +107,81 @@ class UserController {
         
         // Determine whether the identifier is an email or a username
         $emailPassword = $user->getPasswordFromEmail($identifier);
-        if ($emailPassword) {
+        if ($emailPassword) {   
+            throwSuccess('User email found');
+            $email = true;
             $dbPassword = $emailPassword;
             $uid = $user->getUidFromEmail($identifier);
         } else {
+            throwWarning('User email not found');
             $userPassword = $user->getPasswordFromUsername($identifier);
             if ($userPassword) {
+                $username = true;
+                throwSuccess('Username found');
                 $dbPassword = $userPassword;
                 $uid = $user->getUidFromUsername($identifier);
             } else {
+                throwWarning('Username not found');
                 // Return an error if the user cannot be found
                 echo json_encode(array('status' => 'error', 'message' => 'User not found'));
                 http_response_code(ERROR_NOT_FOUND);
-                exit;
+                return false; 
             }
         }
 
         // Check if the password is correct
         if (password_verify($password, $dbPassword)) {
+            throwSuccess('Provided password was correct');
+            // Log a successful login
+            $this->logger->log($uid, 'login_success');
+
+            // Save Device of user logging in
+            $device = new Device($this->dbConnection, $this->logger);
+
+            $deviceId = $device->saveDevice($uid);
+
+            if($deviceId){
+            throwSuccess('Device saved');
             // Save the token in the database
-            $token = $user->setToken($uid);
+            $token = $user->setToken($uid, $deviceId);
             if(!$token){
                 // Return an error if the password is incorrect
                 echo json_encode(array('status' => 'error', 'message' => 'Token could not be saved'));
                 http_response_code(ERROR_UNAUTHORIZED);
-                exit;
+                return false;
             }
             // Return the token to the client
-            echo json_encode(array('status' => 'success', 'token' => $token));
-            http_response_code(SUCCESS_OK);
-            exit;
+            sendResponse('success', ['token' => $token], SUCCESS_OK);
+            return true;
+            } else {
+                throwError('Device not saved');
+                sendResponse('error', ['message' => "Device of user could not be saved."], ERROR_INTERNAL_SERVER);
+                return false;
+            }
         } else {
+            throwError('Provided password was incorrect');
+            // use later once logging becomes really serious
+            //$identifierKey = $email === true ? "email" : "username";
+
+            // Log a failed login attempt
+            $this->logger->log(0, 'login_failed', ['user_id' => $uid, 'ip' => $_SERVER['REMOTE_ADDR']]);
+            
             // Return an error if the password is incorrect
             echo json_encode(array('status' => 'error', 'message' => 'Invalid password'));
-            http_response_code(ERROR_UNAUTHORIZED);
-            exit;
+
+            // It was an invalid password but we don't want to confirm or deny info just in case it was an opp
+            sendResponse('error', ['message' => "Invalid Username or Password."], ERROR_UNAUTHORIZED);
+            return false;
         }
+    } catch (Exception $e) {
+        // Handle unexpected exceptions and log them
+        $this->logger->log(0, 'authentication_error', ['error_message' => $e->getMessage()]);
+        // Return an error response
+        echo json_encode(array('status' => 'error', 'message' => 'An unexpected error occurred.'));
+        http_response_code(ERROR_INTERNAL_SERVER);
+        return false;
     }
+}
     
     public function removeToken($uid, $token = null) {
         if ($token) {

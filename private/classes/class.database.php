@@ -231,6 +231,7 @@ class DatabaseConnector {
             }
         }
         catch(Exception $e) {
+            echo $e->getMessage();
             $GLOBALS['messages']['errors'][] = '<b>Error: </b>' . $e->getMessage();
             return false;
         }

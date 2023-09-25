@@ -1,4 +1,5 @@
 <?php
+include($GLOBALS['config']['private_folder'].'/classes/class.logger.php');
 
 class Router {
     
@@ -260,9 +261,11 @@ class Router {
                         }
                     }
                 }
-
+                $logger = new Logger($dbConnection);
                 // Call the controller method with the parameters
-                $controllerInstance = $controller !== 'DevController' ? new $controller($dbConnection) : new $controller($dbConnection, $this->routes);
+                // TODO: Implement newly injected logger functionality throughout entire application
+                $controllerInstance = $controller !== 'DevController' ? new $controller($dbConnection, $logger) : new $controller($dbConnection, $logger, $this->routes);
+                
                 $controllerInstance->{$method}(...$validatedParams);
                 $routeMatched = true; // Set the flag to true as a route was dispatched
                 return;

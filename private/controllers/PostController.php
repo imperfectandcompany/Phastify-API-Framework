@@ -5,17 +5,19 @@
     class PostController {
         
         protected $dbConnection;
+        protected $logger;
 
         private $isTestingMode = false; // Add this to the top of your class
 
         
-        public function __construct($dbConnection)
+        public function __construct($dbConnection, $logger)
         {
             $this->dbConnection = $dbConnection;
             $post = new Post($this->dbConnection);
             $security = new Security($this->dbConnection);
             $this->post = $post;
             $this->security = $security;
+            $this->logger = $logger;
         }
 
         /**
