@@ -5,7 +5,7 @@ include_once($GLOBALS['config']['private_folder'].'/controllers/IntegrationContr
         protected static $inputStream;
         protected $dbConnection;
 
-        public function __construct($dbConnection) {
+        public function construct($dbConnection) {
             parent::__construct($dbConnection);
             $this->dbConnection = $dbConnection;
         }

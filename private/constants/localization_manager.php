@@ -48,9 +48,10 @@ class LocalizationManager
         $this->environment = $environment;
         $this->defaultLocale = $defaultLocale;
         $this->cache = $cache;
+        $this->loadConstants('system_constants.php');
+        $this->loadConstants('application_constants.php');
         $this->loadConstants('error_constants.php');
         $this->loadConstants('log_constants.php');
-        $this->loadConstants('system_constants.php');
     }
 
     /**

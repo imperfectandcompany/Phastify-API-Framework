@@ -8,7 +8,7 @@ include_once($GLOBALS['config']['private_folder'].'/classes/class.post.php');
         protected $dbConnection;
         protected $logger;
 
-        public function __construct($dbConnection, $logger)
+        public function construct($dbConnection, $logger)
         {
             $this->dbConnection = $dbConnection;
             $comments = new Comments($this->dbConnection);

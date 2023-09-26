@@ -6,11 +6,8 @@
         
         protected $dbConnection;
         protected $logger;
-
-        private $isTestingMode = false; // Add this to the top of your class
-
         
-        public function __construct($dbConnection, $logger)
+        public function construct($dbConnection, $logger)
         {
             $this->dbConnection = $dbConnection;
             $post = new Post($this->dbConnection);

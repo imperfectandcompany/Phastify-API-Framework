@@ -1,5 +1,3 @@
-<?php
-?>
 <hr />
 <h1>DEV MODE IS ON -- Do not use in production!</h1>
 
@@ -16,7 +14,7 @@
 <?php print_r($GLOBALS['url_loc']); ?>
 
 <h4>token</h4>
-<?php isset($GLOBALS['token']) && !empty($GLOBALS['token']) ? print_r($GLOBALS['token']) : "Not available"; ?>
+<?php isset($GLOBALS['token']) && !empty($GLOBALS['token']) ? print_r($GLOBALS['token']) : "Token not available</br>"; ?>
 
 <h4>user_id</h4>
-<?php echo isset($GLOBALS['user_id']) ? $GLOBALS['user_id'] : "Not available"; ?>
+<?php echo isset($GLOBALS['user_id']) ? $GLOBALS['user_id'] : "UserId not available</br><br><br>"; ?>

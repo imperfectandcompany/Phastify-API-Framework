@@ -1,6 +1,12 @@
 <?php
+define('ERROR_UNAUTHORIZED', 401);
+define('ERROR_BAD_REQUEST', 400);
+define('ERROR_NOT_FOUND', 404);
+define('ERROR_INTERNAL_SERVER', 500);
+define('ERROR_FORBIDDEN', 403);
+define('ERROR_METHOD_NOT_ALLOWED', 405);
+define('ERROR_INVALID_INPUT', 422);
+define('ERROR_USER_ALREADY_EXISTS', 409);
+define('SUCCESS_OK', 200);
+define('SUCCESS_CREATED', 201);
 
-define('ERROR_LOGIN_FAILED', 'login_failed');
-define('ERROR_UNAUTHORIZED', 'unauthorized');
-define('ERROR_BAD_REQUEST', 'bad_request');
-define('ERROR_NOT_FOUND', 'not_found');

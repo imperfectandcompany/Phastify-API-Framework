@@ -32,8 +32,9 @@ class UserController {
         }
     }
     
+    //TODO: implement device check for logs. See if ip has registered before. Also save device on register, without UID (unclaimed). No login_tokens association until logged in.
     public function register() {
-//        header('Content-Type: application/json');
+        //header('Content-Type: application/json');
         // Retrieve the post body from the request
         $postBody = file_get_contents("php://input");
         $postBody = json_decode($postBody);
@@ -139,20 +140,25 @@ class UserController {
             $device = new Device($this->dbConnection, $this->logger);
 
             $deviceId = $device->saveDevice($uid);
-
             if($deviceId){
             throwSuccess('Device saved');
             // Save the token in the database
-            $token = $user->setToken($uid, $deviceId);
-            if(!$token){
-                // Return an error if the password is incorrect
-                echo json_encode(array('status' => 'error', 'message' => 'Token could not be saved'));
-                http_response_code(ERROR_UNAUTHORIZED);
-                return false;
-            }
-            // Return the token to the client
-            sendResponse('success', ['token' => $token], SUCCESS_OK);
-            return true;
+                if(($device->associateDeviceIdWithLogin($uid, $deviceId, $device->getDevice(), $_SERVER['REMOTE_ADDR']))){
+                    $token = $user->setToken($uid, $deviceId);
+                    if(!$token){
+                        // Return an error if the password is incorrect
+                        sendResponse('error', ['message' => "Token could not be saved."], ERROR_INTERNAL_SERVER);
+                        http_response_code(ERROR_UNAUTHORIZED);
+                        return false;
+                    }
+                    // Return the token to the client
+                    sendResponse('success', ['token' => $token], SUCCESS_OK);
+                    return true;
+                } else {
+                    throwError('Device not associated with login');
+                    sendResponse('error', ['message' => "Device of user could not be associated with login."], ERROR_INTERNAL_SERVER);
+                    return false;
+                }
             } else {
                 throwError('Device not saved');
                 sendResponse('error', ['message' => "Device of user could not be saved."], ERROR_INTERNAL_SERVER);

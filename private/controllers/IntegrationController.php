@@ -7,7 +7,7 @@
         protected $integration;
         protected $logger;
 
-        public function __construct($dbConnection, $logger)
+        public function construct($dbConnection, $logger)
         {
             $this->dbConnection = $dbConnection;
             $integration = new Integration($this->dbConnection);

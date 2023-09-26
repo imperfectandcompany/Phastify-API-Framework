@@ -150,6 +150,8 @@ class User {
      * @return string|false Returns the newly generated token if it was set successfully, or false otherwise
      */
     public function setToken($uid, $deviceId) {
+        echo "Debugging: UID = $uid, Device ID = $deviceId\n";
+
         // Generate a token
         $cstrong = True;
         $token = bin2hex(openssl_random_pseudo_bytes(64, $cstrong));
@@ -158,8 +160,8 @@ class User {
         $token_hash = sha1($token);
         // Prepare the SQL statement to insert a new record with the user ID and hashed token
         $rows = 'user_id, token, device_id';
-        $values = '?, ?, device_id';
-        $paramValues = array($uid, $token_hash);
+        $values = '?, ?, ?';
+        $paramValues = array($uid, $token_hash, $deviceId);
         $filterParams = makeFilterParams($paramValues);
         $result = $this->dbObject->insertData('login_tokens', $rows, $values, $filterParams);
 
