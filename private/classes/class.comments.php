@@ -10,8 +10,6 @@ class Comments
     public function __construct($dbConnection)
     {
         $this->dbConnection = $dbConnection;
-        $PostController = new PostController($this->dbConnection);
-        $this->postController = $PostController;
     }
 
 

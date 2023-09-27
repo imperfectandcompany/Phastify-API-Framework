@@ -264,7 +264,7 @@ class Router {
                 $logger = new Logger($dbConnection);
                 // Call the controller method with the parameters
                 // TODO: Implement newly injected logger functionality throughout entire application
-                $controllerInstance = $controller !== 'DevController' ? new $controller($dbConnection, $logger) : new $controller($dbConnection, $logger, $this->routes);
+                $controllerInstance = $controller !== 'DevController' ? new $controller($dbConnection, $logger) : new $controller($dbConnection, $this->routes);
                 
                 $controllerInstance->{$method}(...$validatedParams);
                 $routeMatched = true; // Set the flag to true as a route was dispatched

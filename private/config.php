@@ -8,9 +8,19 @@ $GLOBALS['config']['private_folder'] = "/usr/www/igfastdl/postogon-api/private";
 $GLOBALS['config']['timezone'] = "America/New_York";
 //If the site is not in a root folder, how many values in the url_loc array will we be ignoring so we think we're in a root folder?
 $GLOBALS['config']['url_offset'] = 0;
+//dbconf includes database details i can't pass to github, config stores all global data and soon will do more... we will decouple
+//this ultimately!
+require('dbconfig.php');
+//Database variables
+$GLOBALS['db_conf']['db_host']  =    $domain;
+$GLOBALS['db_conf']['db_user']  =    $user;
+$GLOBALS['db_conf']['db_pass']  =    $pass;
+$GLOBALS['db_conf']['db_db']    =    $table;
+$GLOBALS['db_conf']['port']     =    '3306';
+$GLOBALS['db_conf']['db_charset']  = 'utf8mb4';
 
 $GLOBALS['config']['devmode'] = 1; //This enables dev mode to print out dev information -- DO NOT USE IN PRODUCTION!
-$GLOBALS['config']['testmode'] = 0; //This enables testing
+$GLOBALS['config']['testmode'] = 1; //This enables testing
 
 //General settings
 $GLOBALS['config']['max_username_length'] = '32';
@@ -45,7 +55,6 @@ if($GLOBALS['config']['url_offset'] > 0){
     $x = 0; while($x < ($GLOBALS['config']['url_offset'])){ unset($GLOBALS['url_loc'][$x]); $x++; }
     $GLOBALS['url_loc'] = array_values($GLOBALS['url_loc']);
 }
-
 
 //When we're looking up a user's profile, we use this query to easily not accidentally call their password when we don't need it.
 $GLOBALS['config']['profile_lookup'] = "id,username,email,admin,verified,createdAt,avatar,display_name";

@@ -50,11 +50,15 @@ class TestRunner
             foreach ($testData['tests'] as $test) {
                 $count = count($testData['tests']);
                 $index = array_search($test, $testData['tests']) + 1;
-                $remaining = $totalTests - $totalTestsRun;
-                echo "Initiating test {$index} out of {$count} in this category ({$remaining} total remaining)\n<br><br>";
+                $value = $count-$index;
+                echo "Initiating test {$index} out of {$count} in this category";
+                echo "\n\n</br>Running: {$test}... ";
+
+
                 $totalTestsRun++;
-    
                 $this->runTest($test, $controller);
+                echo $value == 0 ? "Category test complete (0 remaining)</br></br>":"({$value} total remaining)\n<br><br>";
+
     
                 // Capture category metrics from $GLOBALS
                 if (isset($GLOBALS['logs'][$GLOBALS['currentTest']])) {
@@ -102,8 +106,8 @@ class TestRunner
 
     private function runTest($testName, $controller)
     {
+        echo '<div class="test">'; // End of the test div
         $GLOBALS['currentTest'] = $testName; // Set the currently running test name
-        echo "<div class='test'>Running: {$testName}... ";
         try {
                 $this->currentFailed = false;
                 try{
@@ -116,7 +120,7 @@ class TestRunner
                 finally{
                     $this->testCleanup();
                 }
-            echo "<span class='passed'>PASSED</span>";
+            echo "<span class='passed'>PASSED</span></br></br>";
             $this->metrics['passed']++;
         } catch (Exception $e) {
             $this->failed = true;

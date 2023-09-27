@@ -6,11 +6,10 @@ class DevController {
     protected $router;
     protected $logger;
 
-    public function __construct($dbConnection, $router, $logger)
+    public function __construct($dbConnection, $router)
     {
         $this->dbConnection = $dbConnection;
         $this->router = $router;
-        $this->logger = $logger;
     }
     
     public function getDevMode() {
@@ -40,7 +39,6 @@ class DevController {
         
         // Get the list of routes from the router.
         $routes = $this->router;
-    
         // Start building the HTML content.
         $html = '<html><head><title>Available Routes</title></head><body>';
         $html .= '<h1>Available Routes</h1>';

@@ -8,12 +8,12 @@ include_once($GLOBALS['config']['private_folder'].'/classes/class.post.php');
         protected $dbConnection;
         protected $logger;
 
-        public function construct($dbConnection, $logger)
+        public function __construct($dbConnection, $logger)
         {
             $this->dbConnection = $dbConnection;
             $comments = new Comments($this->dbConnection);
             $this->comments = $comments;
-            $PostController = new PostController($this->dbConnection);
+            $PostController = new PostController($this->dbConnection, $logger);
             $this->postController = $PostController;
             $this->logger = $logger;
         }

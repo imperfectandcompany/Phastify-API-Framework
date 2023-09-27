@@ -7,7 +7,7 @@
         protected $dbConnection;
         protected $logger;
         
-        public function construct($dbConnection, $logger)
+        public function __construct($dbConnection, $logger)
         {
             $this->dbConnection = $dbConnection;
             $post = new Post($this->dbConnection);

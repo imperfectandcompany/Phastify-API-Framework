@@ -134,8 +134,7 @@ $router = new Router();
 // get an instance of the Devmode class
 $devMode = new Dev($dbConnection);
 $GLOBALS['config']['devmode'] = $devMode->getDevModeStatus();
-
-
+$GLOBALS['config']['testmode'] = 1; //This disables testing
 
 // Fetch the public timeline (POST request)
 $router->add('/timeline/publicTimeline', 'TimelineController@fetchPublicTimeline', 'POST');
@@ -309,15 +308,17 @@ if($GLOBALS['config']['devmode'] == 1){
 
     // TODO: LIST CONSTANTS ENDPOINT
 }
-$GLOBALS['config']['testmode'] = 0; //This disables testing
 
+$GLOBALS['config']['testmode'] = 0; //This enables testing
 //dispatch router since authentication and global variables are set!
 $router->dispatch($GLOBALS['url_loc'], $dbConnection, $GLOBALS['config']['devmode']);
-$GLOBALS['config']['testmode'] = 1; //This enables testing
+// Check if we're in devmode
 if($GLOBALS['config']['devmode'] == 1){
     include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');  
 }
-// Check if we're in devmode
+
+$GLOBALS['config']['testmode'] = 1; //This enables testing
+
 if ($GLOBALS['config']['devmode'] && $GLOBALS['config']['testmode']) {
     // Run testing script
     include_once($GLOBALS['config']['private_folder'].'/tests/tests.php');
@@ -336,6 +337,7 @@ if ($GLOBALS['config']['devmode'] && $GLOBALS['config']['testmode']) {
 //    default:
 //        break;
 //}
+
 
 // unset token to prevent accidental use
 unset($token);
