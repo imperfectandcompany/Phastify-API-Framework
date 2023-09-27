@@ -23,7 +23,7 @@ class TokenService
             $query = "WHERE user_id = ?";
             $params = makeFilterParams($userId);
             // Use DatabaseConnector's viewData method to execute the query
-            $results = $this->dbObject->viewData('login_tokens', '*', $query, $params);
+            $results = $this->dbObject->viewData('login_tokens', 'token, expiration_time', $query, $params);
 
             // Return the retrieved tokens
             return $results['results'];
@@ -79,12 +79,6 @@ class TokenService
                 }
                 if ($foundTokenFromDeviceId && !empty($tokenPairs)) {
                     $tokenPairsCount = count($tokenPairs);
-                    foreach ($tokenPairs as $tokenPair) {
-                        echo "<br>";
-                        echo "Device ID: " . $tokenPair['device_id'] . "<br>";
-                        echo "Token: " . $tokenPair['token'] . "<br>";
-                        echo "User ID: " . $tokenPair['user_id'] . "<br>";
-                    }
                     $this->logger->log(0, 'tokens_found_for_paired_ip_device_id', ['PairsFound' => $tokenPairsCount, 'TokenPairs' => $tokenPairs, 'IP' => $ip]);
                     return true;
                 } else {

@@ -47,7 +47,7 @@ class Device
         // Create an instance of the TokenService class
         $tokenService = new TokenService($this->dbObject, $this->logger);
 
-        // Get device information 
+        // Get device information
         // TODO: increase device info accuracy
         $deviceInfo = $this->getDeviceInfo();
 
@@ -56,15 +56,12 @@ class Device
             return false;
         }
 
-        // We get all the tokens associated by IP and log within the function
-        $tokenService->logTokensByIp($_SERVER['REMOTE_ADDR']);
-
         if ($this->hasPreviousLoginLogs($uid, $tokenService, $deviceService)) {
             // User has previous login activity, check if tokens are expired
             $isTokenExpired = $this->isTokenExpired($uid);
             if ($isTokenExpired) {
                 // Log token expiration activity
-                $this->logger->log($uid, 'token_expired', $deviceInfo);
+                $this->logger->log($uid, 'token_expired', $isTokenExpired);
             }
             // Check if this user finished onboarding (based on the username)
             $isOnboardingNotComplete = $this->isUserOnboarded($uid);
@@ -74,14 +71,28 @@ class Device
             } else {
                 throwWarning('User has onboarding completed');
             }
-        } else {
-            // Lets see if this is the user's first time logging in
-            if (empty($this->logger->getUserLogsByAction($uid, 'login_success'))) {
-                $this->logger->log($uid, 'login_success_first_time');
-            } else {
-                $this->logger->log($uid, 'login_success');
+        }
+        // We get all the tokens associated by IP and log within the function
+        $tokenService->logTokensByIp($_SERVER['REMOTE_ADDR']);
+
+        // Let's see if this is the user's first time logging in
+        $foundSuccess = false;
+        $checkIfFirstTime = $this->logger->getUserLogsByAction($uid, "login_success_first_time");
+        if (is_array($checkIfFirstTime) && $checkIfFirstTime["count"] > 0) {
+            foreach ($checkIfFirstTime["results"] as $log) {
+                if (!empty($log["action"]) && $log['action'] == 'login_success_first_time') {
+                    $foundSuccess = true;
+                    break; // No need to continue checking
+                }
             }
         }
+
+        if ($foundSuccess) {
+            $this->logger->log($uid, 'login_success');
+        } else {
+            $this->logger->log($uid, 'login_success_first_time');
+        }
+
         $this->logger->log($uid, 'device_login_save_intiated', $deviceInfo);
         try {
             // Update the device information in the devices table
@@ -179,7 +190,6 @@ class Device
         // Another check for default login_success just in case
         $userLogs2 = $this->logger->getUserLogsByAction($uid, 'login_success');
 
-
         // We can't get devices, just a single device because you can only have one device
         // Check if there are associated devices
         $associatedDevices = $deviceService->getDevicesByUserId($uid);
@@ -187,17 +197,25 @@ class Device
         // Check if there are login tokens for the user
         $loginTokens = $tokenService->getTokensByUserId($uid);
 
-        // If there are previous login logs, associated devices, or login tokens, return true
-        if (!empty($userLogs) || !empty($userLogs2) || !empty($associatedDevices) || !empty($loginTokens)) {
-            if (!empty($userLogs) || !empty($userLogs2)) {
-                throwWarning('User has previous login logs');
-                $this->logger->log(
-                    $uid,
-                    'previous_login_logs',
-                    'User has previous login logs'
-                );
+            // If there is evidence of previous login activity, return true
+            if (
+                (is_array($userLogs) && !empty($userLogs) && $userLogs["count"] > 0) ||
+                (is_array($userLogs2) && !empty($userLogs2) && $userLogs2["count"] > 0) ||
+                (is_array($associatedDevices) && !empty($associatedDevices)) ||
+                (is_array($loginTokens) && !empty($loginTokens))
+            ) {
+            if (is_array($userLogs) && !empty($userLogs2)) {
+                if ($userLogs["count"] > 0 || $userLogs2["count"] > 0) {
+                    throwWarning('User has previous login logs');
+                    echo "omgf";
+                    $this->logger->log(
+                        $uid,
+                        'previous_login_logs',
+                        'User has previous login logs'
+                    );
+                }
             }
-            if (!empty($associatedDevices)) {
+            if (is_array($associatedDevices) && !empty($associatedDevices)) {
                 throwWarning('User has previous associated devices');
                 $this->logger->log(
                     $uid,
@@ -205,7 +223,7 @@ class Device
                     'User has previous associated devices'
                 );
             }
-            if (!empty($loginTokens)) {
+            if (is_array($loginTokens) && !empty($loginTokens)) {
                 throwWarning('User has previous login tokens');
                 $this->logger->log(
                     $uid,
@@ -213,16 +231,20 @@ class Device
                     'User has previous login tokens'
                 );
             }
-
+        
             // Log that evidence of a previous login was found
             $this->logger->log($uid, 'previous_login_evidence', [
-                'login_success_count' => count($userLogs),
-                'login_success_first_time' => count($userLogs2),
-                'associated_devices_count' => count($associatedDevices),
-                'login_tokens_count' => count($loginTokens),
+                'login_success_count' => is_array($userLogs) ? $userLogs["count"] : 0,
+                'login_success_first_time' => is_array($userLogs2) ? $userLogs2["count"] : 0,
+                'associated_devices_count' => is_array($associatedDevices) ? count($associatedDevices) : 0,
+                'login_tokens_count' => is_array($loginTokens) ? count($loginTokens) : 0,
             ]);
-
+        
             return true;
+        } else {
+            // Log that no evidence of a previous login was found
+            $this->logger->log($uid, 'no_previous_login_evidence');
+            return false;
         }
 
         return false;
@@ -255,12 +277,12 @@ class Device
             // Check if all tokens are expired;
             if ($this->areAllTokensExpired($loginTokens)) {
                 // Log that all tokens are expired
-                $this->logger->log($uid, 'all_tokens_expired', true);
+                $this->logger->log($uid, 'all_tokens_expired');
                 // Return true to indicate the first-time login
                 return true;
             } else {
                 // Log that there are valid tokens for the user
-                $this->logger->log($uid, 'all_tokens_expired', false);
+                $this->logger->log($uid, 'all_tokens_not_expired');
                 // TODO Log which tokens are valid on the device (lets stop here for now)
                 return false;
             }
@@ -276,8 +298,8 @@ class Device
      */
     private function areAllTokensExpired($tokens)
     {
-        foreach ($tokens as $token) {
-            if (!$this->isTokenExpiredByTimestamp($token['expiration_time'])) {
+        foreach ($tokens as $key) {
+            if (!$this->isTokenExpiredByTimestamp($key['expiration_time'])) {
                 return false;
             }
         }
@@ -339,8 +361,8 @@ class Device
     }
 
 
-    // TODO: Setup logs to identify if the user is being presented with the onboarding screen for the first time based on if 
-    // onboarding_not_completed exists in the logs 
+    // TODO: Setup logs to identify if the user is being presented with the onboarding screen for the first time based on if
+    // onboarding_not_completed exists in the logs
     // update i did it differently
 
     /**
@@ -362,7 +384,7 @@ class Device
                 // If the query was successful, check if the username is empty.
                 if (empty($result["result"]['username'])) {
                     // Check if this is the user's first time seeing onboarding
-                    $onboardingLogs = $this->logger->getUserLogsByAction($uid, 'onboarding_not_completed_first_time');
+                    $onboardingLogs = $this->logger->log($uid, 'onboarding_not_completed_first_time');
                     if (!empty($onboardingLogs)) {
                         // If there are logs for onboarding not completed for the first time, we can assume this isn't their first time hitting onboarding
                         $this->logger->log($uid, 'onboarding_not_completed', $this->getDeviceInfo());
@@ -372,11 +394,11 @@ class Device
                     }
                 } else {
                     $username = $result['result']['username'];
-                    $onboardingLogs = $this->logger->getUserLogsByAction($uid, 'onboarding_completed_already', "{username: " . $username . "}");
+                    $onboardingLogs = $this->logger->log($uid, 'onboarding_completed_already', "{username: " . $username . "}");
                 }
                 // Return true if user has onboarding completed, false if not
                 // if the check for username is empty returns true, then the user has not completed onboarding
-                return empty($result[0]['username']);
+                return empty($result["result"]['username']);
             } else {
                 // Handle the case where the query failed.
                 $this->logger->log(0, 'first_login_error', ['error_message' => 'Database query failed']);

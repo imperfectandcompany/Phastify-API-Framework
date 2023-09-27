@@ -156,15 +156,20 @@ class User {
 
         // Hash the token for security
         $token_hash = sha1($token);
-        // Prepare the SQL statement to insert a new record with the user ID and hashed token
-        $rows = 'user_id, token, device_id';
-        $values = '?, ?, ?';
-        $paramValues = array($uid, $token_hash, $deviceId);
+
+        // Calculate the expiration time (7 days from now)
+        $expiration_time = date('Y-m-d H:i:s', strtotime('+7 days'));
+
+        // Prepare the SQL statement to insert a new record with the user ID, hashed token, and expiration time
+        $rows = 'user_id, token, device_id, expiration_time';
+        $values = '?, ?, ?, ?';
+        $paramValues = array($uid, $token_hash, $deviceId, $expiration_time);
         $filterParams = makeFilterParams($paramValues);
         $result = $this->dbObject->insertData('login_tokens', $rows, $values, $filterParams);
 
         // Check if the insert was successful and return the token if so
         return $result !== false ? $token : false;
     }
+
 
 }

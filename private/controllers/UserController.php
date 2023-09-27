@@ -141,9 +141,10 @@ class UserController {
             $deviceId = $device->saveDevice($uid);
             if($deviceId){
             throwSuccess('Device saved');
-            $this->logger->log($uid, 'device_login_save_success', "{device_id: $deviceId}");
+            $this->logger->log($uid, 'device_login_save_success', '{device_id: '.$deviceId.'}');
             // Save the token in the database
                 if(($device->associateDeviceIdWithLogin($uid, $deviceId, $device->getDevice(), $_SERVER['REMOTE_ADDR']))){
+                    $this->logger->log($uid, 'token_save_initiated', '{device_id: '.$deviceId.'}');
                     $token = $user->setToken($uid, $deviceId);
                     if(!$token){
                         // Return an error if the password is incorrect

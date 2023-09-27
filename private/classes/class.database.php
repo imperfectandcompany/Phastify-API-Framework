@@ -151,6 +151,8 @@ class DatabaseConnector {
             return array("count" => $stmt->rowCount(), "results" => $stmt->fetchAll());
         }
         catch(Exception $e) {
+        echo $e->getMessage();
+
             $GLOBALS['messages']['errors'][] = '<b>Error: </b>' . $e->getMessage();
             return false;
         }

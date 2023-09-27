@@ -1,0 +1,91 @@
+-- Table structure for table `devices`
+DROP TABLE IF EXISTS `devices`;
+CREATE TABLE `devices` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `device_name` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `first_login` timestamp NULL DEFAULT NULL,
+  `last_login` timestamp NULL DEFAULT NULL,
+  `is_logged_in` tinyint(1) NOT NULL DEFAULT '0',
+  `expired` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `fk_devices_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Table structure for table `activity_log`
+DROP TABLE IF EXISTS `activity_log`;
+CREATE TABLE `activity_log` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `action` varchar(255) NOT NULL,
+  `activity_data` json DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `location` json DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `action_index` (`action`),
+  CONSTRAINT `fk_activity_log_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Table structure for table `device_ips`
+DROP TABLE IF EXISTS `device_ips`;
+CREATE TABLE `device_ips` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `device_id` int(11) UNSIGNED NOT NULL,
+  `ip_address` varchar(45) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `device_id` (`device_id`),
+  CONSTRAINT `fk_device_ips_device_id` FOREIGN KEY (`device_id`) REFERENCES `devices` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Table structure for table `login_logs`
+DROP TABLE IF EXISTS `login_logs`;
+CREATE TABLE `login_logs` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `device_id` int(11) UNSIGNED NOT NULL,
+  `ip_address` varchar(45) NOT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `success` tinyint(1) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `device_id` (`device_id`),
+  CONSTRAINT `fk_login_logs_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_login_logs_device_id` FOREIGN KEY (`device_id`) REFERENCES `devices` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Table structure for table `login_tokens`
+DROP TABLE IF EXISTS `login_tokens`;
+CREATE TABLE `login_tokens` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `token` char(64) DEFAULT NULL,
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `device_id` int(11) UNSIGNED NOT NULL,
+  `expiration_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `token` (`token`),
+  KEY `user_id` (`user_id`),
+  KEY `device_id` (`device_id`),
+  CONSTRAINT `fk_login_tokens_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_login_tokens_device_id` FOREIGN KEY (`device_id`) REFERENCES `devices` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  UNIQUE INDEX `unique_device_id` (`device_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Stand-in structure for view `user_login_history`
+DROP VIEW IF EXISTS `user_login_history`;
+CREATE TABLE `user_login_history` (
+  `Username` varchar(32),
+  `Login Timestamp` timestamp,
+  `IP Address` varchar(45),
+  `Login Success` tinyint(1)
+);
+
+-- Structure for view `user_login_history`
+DROP TABLE IF EXISTS `user_login_history`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`igfastdl`@`localhost` SQL SECURITY DEFINER VIEW `user_login_history` AS
+SELECT `u`.`username` AS `Username`, `l`.`timestamp` AS `Login Timestamp`, `l`.`ip_address` AS `IP Address`, `l`.`success` AS `Login Success`
+FROM `login_logs` `l`
+JOIN `users` `u` ON (`l`.`user_id` = `u`.`id`);
