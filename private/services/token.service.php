@@ -39,39 +39,67 @@ class TokenService
      *
      * @param string $ip The IP address to retrieve tokens for.
      *
-     * @return array An array of tokens associated with the IP address.
+     * @return bool true if tokens were found, false otherwise.
      */
-    public function getTokensByIp($ip)
+    public function logTokensByIp($ip)
     {
         try {
             // Step 1: Get device IDs associated with the IP address
             $query = "WHERE ip_address = ?";
             $params = makeFilterParams($ip);
             $deviceIpData = $this->dbObject->viewData('device_ips', '*', $query, $params);
-    
+
             // Step 2: Get tokens associated with each device ID
-            $tokens = [];
-            foreach ($deviceIpData as $ipData) {
-                if (isset($ipData['device_id'])) {
-                    $deviceId = $ipData['device_id']; // Extract the device_id
-                    $query = "WHERE device_id = ?";
-                    $params = makeFilterParams($deviceId);
-                    $results = $this->dbObject->viewData('login_tokens', 'token', $query, $params);
-                    
-                    foreach ($results as $result) {
-                        // Ensure that 'token' key exists in the $result array
-                        if (isset($result['token'])) {
-                            $tokens[] = $result['token'];
-                        }                    
+            $deviceIds = [];
+            $foundTokenFromDeviceId = false;
+            if ($deviceIpData['count'] > 0 && !empty($deviceIpData['results'])) {
+                foreach ($deviceIpData["results"] as $ipData) {
+                    if (!empty($ipData['device_id'])) {
+                        $deviceId = $ipData['device_id']; // Extract the device_id
+                        $query = "WHERE device_id = ?";
+                        $params = makeFilterParams($deviceId);
+                        // look for login tokens associated with the ip address that is paired with the device id
+                        $results = $this->dbObject->viewData('login_tokens', 'token, user_id', $query, $params);
+                        if ($results['count'] > 0 && !empty($results['results'])) {
+                            foreach ($results["results"] as $result) {
+                                // Ensure that 'token' key exists in the $result array
+                                if (!empty($result["token"] && !empty($result["user_id"]))) {
+                                    if ($foundTokenFromDeviceId == false) {
+                                        $foundTokenFromDeviceId = true;
+                                    }
+                                    $tokenPairs[] = [
+                                        'device_id' => $deviceId,
+                                        'user_id' => $result["user_id"],
+                                        'token' => $result["token"]
+                                    ];
+                                }
+                            }
+                        }
                     }
                 }
+                if ($foundTokenFromDeviceId && !empty($tokenPairs)) {
+                    $tokenPairsCount = count($tokenPairs);
+                    foreach ($tokenPairs as $tokenPair) {
+                        echo "<br>";
+                        echo "Device ID: " . $tokenPair['device_id'] . "<br>";
+                        echo "Token: " . $tokenPair['token'] . "<br>";
+                        echo "User ID: " . $tokenPair['user_id'] . "<br>";
+                    }
+                    $this->logger->log(0, 'tokens_found_for_paired_ip_device_id', ['PairsFound' => $tokenPairsCount, 'TokenPairs' => $tokenPairs, 'IP' => $ip]);
+                    return true;
+                } else {
+                    //No tokens found for device ID
+                    $this->logger->log(0, 'no_tokens_found_for_paired_ip_device_id', ['IP' => $ip, 'Device ID' => $deviceIds]);
+                    return false;
+                }
+            } else {
+                $this->logger->log(0, 'no_device_ids_found_from_ip', ['error_message' => 'No device IDs found for IP address.', 'IP' => $ip]);
+                return false;
             }
-    
-            return $tokens;
         } catch (Exception $e) {
             $this->logger->log(0, 'get_tokens_by_ip_error', ['error_message' => $e->getMessage()]);
-            return [];
+            return false; // Return false to indicate an error occurred
         }
     }
-    
+
 }

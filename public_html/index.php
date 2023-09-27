@@ -6,7 +6,6 @@ include '../private/config.php';
 date_default_timezone_set($GLOBALS['config']['timezone']);
 
 
-
 // start output buffering
 if(!ob_start("ob_gzhandler")) ob_start();
 // start session
@@ -24,7 +23,6 @@ include($GLOBALS['config']['private_folder'].'/functions/functions.database.php'
 include($GLOBALS['config']['private_folder'].'/constants.php');
 include($GLOBALS['config']['private_folder'].'/constants/localization_manager.php');
 
-
 // include the necessary files and create a database connection object
 require_once $GLOBALS['config']['private_folder'].'/classes/class.database.php';
 require_once $GLOBALS['config']['private_folder'].'/classes/class.user.php';
@@ -36,16 +34,12 @@ $cache = new LocalizationCache();
 
 // Initialize LocalizationManager with the cache
 $localizationManager = new LocalizationManager(
-    $GLOBALS['config']['private_folder'] . "/constants",
-    $GLOBALS['config']['devmode'] ? 'dev' : 'prod',
-    'en_US',
     $cache
 );
 
 $localizationManager->initialize();
 
 //include($GLOBALS['config']['private_folder'].'/structures/create_constants_structure.php');
-
 // set up database connection
 $dbConnection = new DatabaseConnector(
     $GLOBALS['db_conf']['db_host'],
@@ -55,7 +49,6 @@ $dbConnection = new DatabaseConnector(
     $GLOBALS['db_conf']['db_pass'],
     $GLOBALS['db_conf']['db_charset']
 );
-
 
 require_once $GLOBALS['config']['private_folder'].'/classes/class.router.php';
 

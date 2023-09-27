@@ -9,17 +9,6 @@ $GLOBALS['config']['timezone'] = "America/New_York";
 //If the site is not in a root folder, how many values in the url_loc array will we be ignoring so we think we're in a root folder?
 $GLOBALS['config']['url_offset'] = 0;
 
-//dbconf includes database details i can't pass to github, config stores all global data and soon will do more... we will decouple
-//this ultimately!
-require('dbconfig.php');
-//Database variables
-$GLOBALS['db_conf']['db_host']  =    $domain;
-$GLOBALS['db_conf']['db_user']  =    $user;
-$GLOBALS['db_conf']['db_pass']  =    $pass;
-$GLOBALS['db_conf']['db_db']    =    $table;
-$GLOBALS['db_conf']['port']     =    '3306';
-$GLOBALS['db_conf']['db_charset']  = 'utf8mb4';
-
 $GLOBALS['config']['devmode'] = 1; //This enables dev mode to print out dev information -- DO NOT USE IN PRODUCTION!
 $GLOBALS['config']['testmode'] = 0; //This enables testing
 

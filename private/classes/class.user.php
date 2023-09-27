@@ -150,8 +150,6 @@ class User {
      * @return string|false Returns the newly generated token if it was set successfully, or false otherwise
      */
     public function setToken($uid, $deviceId) {
-        echo "Debugging: UID = $uid, Device ID = $deviceId\n";
-
         // Generate a token
         $cstrong = True;
         $token = bin2hex(openssl_random_pseudo_bytes(64, $cstrong));

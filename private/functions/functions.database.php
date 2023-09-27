@@ -22,6 +22,7 @@
  *   )
  */
 function makeFilterParams($paramValues) {
+
     // Convert a single value to an array
     if (!is_array($paramValues)) {
         $paramValues = array($paramValues);

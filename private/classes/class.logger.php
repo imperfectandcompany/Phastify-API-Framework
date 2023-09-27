@@ -23,6 +23,10 @@ class Logger {
      * @param array|null $data Additional data related to the activity.
      */
     public function log($userId, $action, $data = null) {
+        if($userId == 0) {
+            // if user is not logged in lets use uid 19 which is reserved for guest
+            $userId = 19;
+        }        
         // Create a log entry in the database
         $query = "INSERT INTO activity_log (user_id, action, activity_data) VALUES (?, ?, ?)";
         $params = [$userId, $action, json_encode($data)];
@@ -38,10 +42,16 @@ class Logger {
      * @return array An array of log entries matching the criteria.
      */
     public function getUserLogsByAction($userId, $action) {
+        if($userId == 0) {
+            // if user is not logged in lets use uid 19 which is reserved for guest
+            $userId = 19;
+        }
         // Retrieve logs for a specific user with a specific action
-        $query = "SELECT * FROM activity_log WHERE user_id = ? AND action = ?";
-        $params = [$userId, $action];
-        return $this->dbObject->queryAll($query, $params);
+        $table = 'activity_log';
+        $select = '*';
+        $whereClause = "WHERE user_id = ? AND action = ?";
+        $filter_params = makeFilterParams(array($userId, $action));
+        return $this->dbObject->viewData($table, $select, $whereClause, $filter_params); 
     }
 
     /**
@@ -52,24 +62,14 @@ class Logger {
      * @param array $customData Custom data specific to the activity.
      */
     public function logWithCustomData($userId, $action, $customData) {
+        if($userId == 0) {
+            // if user is not logged in lets use uid 19 which is reserved for guest
+            $userId = 19;
+        }
         // Create a log entry in the database with custom data
         $query = "INSERT INTO activity_log (user_id, action, activity_data, custom_data) VALUES (?, ?, ?, ?)";
         $params = [$userId, $action, json_encode($customData), json_encode($customData)];
         $this->dbObject->query($query, $params);
-    }
-
-    /**
-     * Get all logs for a specific user.
-     *
-     * @param int $userId The ID of the user for whom logs are retrieved.
-     *
-     * @return array An array of log entries for the user.
-     */
-    public function getUserLogs($userId) {
-        // Retrieve logs for a specific user
-        $query = "SELECT * FROM activity_log WHERE user_id = ?";
-        $params = [$userId];
-        return $this->dbObject->queryAll($query, $params);
     }
 
 }

@@ -123,6 +123,7 @@ class UserController {
                 $uid = $user->getUidFromUsername($identifier);
             } else {
                 throwWarning('Username not found');
+                $this->logger->log(0, 'authentication_failed', 'User not found');
                 // Return an error if the user cannot be found
                 echo json_encode(array('status' => 'error', 'message' => 'User not found'));
                 http_response_code(ERROR_NOT_FOUND);
@@ -133,8 +134,6 @@ class UserController {
         // Check if the password is correct
         if (password_verify($password, $dbPassword)) {
             throwSuccess('Provided password was correct');
-            // Log a successful login
-            $this->logger->log($uid, 'login_success');
 
             // Save Device of user logging in
             $device = new Device($this->dbConnection, $this->logger);
@@ -142,17 +141,21 @@ class UserController {
             $deviceId = $device->saveDevice($uid);
             if($deviceId){
             throwSuccess('Device saved');
+            $this->logger->log($uid, 'device_login_save_success', "{device_id: $deviceId}");
             // Save the token in the database
                 if(($device->associateDeviceIdWithLogin($uid, $deviceId, $device->getDevice(), $_SERVER['REMOTE_ADDR']))){
                     $token = $user->setToken($uid, $deviceId);
                     if(!$token){
                         // Return an error if the password is incorrect
                         sendResponse('error', ['message' => "Token could not be saved."], ERROR_INTERNAL_SERVER);
+                        $this->logger->log($uid, 'token_save_fail', $token);
                         http_response_code(ERROR_UNAUTHORIZED);
                         return false;
                     }
                     // Return the token to the client
                     sendResponse('success', ['token' => $token], SUCCESS_OK);
+                    $this->logger->log($uid, 'token_save_success', $token);
+                    $this->logger->log($uid, 'authentication_end', 'User authenticated successfully');
                     return true;
                 } else {
                     throwError('Device not associated with login');
@@ -162,6 +165,7 @@ class UserController {
             } else {
                 throwError('Device not saved');
                 sendResponse('error', ['message' => "Device of user could not be saved."], ERROR_INTERNAL_SERVER);
+                $this->logger->log($uid, 'device_login_save_fail', $device->getDeviceInfo());
                 return false;
             }
         } else {
@@ -240,9 +244,6 @@ class UserController {
         http_response_code(ERROR_UNAUTHORIZED);
         exit;
     }
-    
-    
-    
     
 }
  ?>

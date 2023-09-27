@@ -42,13 +42,14 @@ class LocalizationManager
      * @param string|null $defaultLocale The default locale (e.g., 'en_US').
      * @param LocalizationCache $cache The cache instance for storing loaded constants.
      */
-    public function __construct($baseDirectory, $environment, $defaultLocale, LocalizationCache $cache)
+    public function __construct(LocalizationCache $cache)
     {
-        $this->baseDirectory = $baseDirectory;
-        $this->environment = $environment;
-        $this->defaultLocale = $defaultLocale;
-        $this->cache = $cache;
+        $this->baseDirectory = $GLOBALS['config']['private_folder'] . "/constants";
         $this->loadConstants('system_constants.php');
+        $this->environment = devmode ? 'dev' : 'prod';
+        $this->defaultLocale = region;
+        $this->cache = $cache;
+        $this->loadConstants('db_constants.php');
         $this->loadConstants('application_constants.php');
         $this->loadConstants('error_constants.php');
         $this->loadConstants('log_constants.php');
