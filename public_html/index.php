@@ -32,7 +32,7 @@ require_once($GLOBALS['config']['private_folder'] . '/classes/class.localization
 // Create a cache instance
 $cache = new LocalizationCache();
 
-// Initialize LocalizationManager with the cache
+// Initialize LocalizationManager with the cach
 $localizationManager = new LocalizationManager(
     $cache
 );
@@ -82,6 +82,7 @@ $result = authenticate_user($token, $dbConnection);
     // $message = $localizationManager->getLocalizedString('ERROR_LOGIN_FAILED');
     
     // echo $message;
+    // yo sterling was here lmaooo
     // echo "afwefw;";
     
 
@@ -221,6 +222,7 @@ $router->add('/post/:id', 'PostController@updatePost', 'PUT');
 $router->addDocumentation('/post/:id', 'PUT', 'Updates an existing post with an optional expiration time.');
 $router->enforceParameters('/post/:id', 'PUT', [
     'body' => 'body',            // Content of the post in the request body
+                                // Easter egg number two yo will you find it??
     'to_whom' => 'body',         // Public (1) or private (2) post in the request body
     // 'expiration_time' => 'body' Optional expiration time in the request body
 ]);
@@ -340,6 +342,7 @@ if ($GLOBALS['config']['devmode'] && $GLOBALS['config']['testmode']) {
 
 
 // unset token to prevent accidental use
+// TODO find the other two easter egss left haha
 unset($token);
 ob_end_flush();
 
