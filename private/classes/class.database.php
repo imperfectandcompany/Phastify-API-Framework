@@ -280,7 +280,11 @@ class DatabaseConnector {
             return false;
         }
         catch(\PDOException $e) {
-            $GLOBALS['messages']['errors'][] = '<b>INTERNAL ERROR: </b>' . $e->getMessage();
+            if ($e->getCode() === '23000') {
+                $GLOBALS['messages']['errors'][] = '<b>UNIQUE CONSTRAINT: </b>' . $e->getMessage();
+            } else {
+                $GLOBALS['messages']['errors'][] = '<b>INTERNAL ERROR: </b>' . $e->getMessage();
+            }
             return false;
         }
     }

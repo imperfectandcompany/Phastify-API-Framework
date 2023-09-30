@@ -89,3 +89,108 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`igfastdl`@`localhost` SQL SECURITY DEFINER V
 SELECT `u`.`username` AS `Username`, `l`.`timestamp` AS `Login Timestamp`, `l`.`ip_address` AS `IP Address`, `l`.`success` AS `Login Success`
 FROM `login_logs` `l`
 JOIN `users` `u` ON (`l`.`user_id` = `u`.`id`);
+
+-- Stored procedure for cleaning up old activity logs to prevent the table from growing too large
+DELIMITER $$
+CREATE PROCEDURE `CleanupActivityLog` ()
+BEGIN
+    DELETE FROM `activity_log` WHERE `created_at` <= DATE_SUB(NOW(), INTERVAL 90 DAYS);
+END$$
+DELIMITER ;
+
+-- Stored procedure for updating the status of users who have not been active for 15 minutes
+DELIMITER $$
+CREATE PROCEDURE `UpdateUserStatus` ()
+BEGIN
+    UPDATE `users` SET `status` = 'offline' WHERE TIMESTAMPDIFF(MINUTE, `updatedAt`, NOW()) > 15;
+END$$
+DELIMITER ;
+
+-- Stored procedure for deleting expired login tokens
+DELIMITER $$
+CREATE PROCEDURE `DeleteExpiredTokens` ()
+BEGIN
+    DELETE FROM `login_tokens` WHERE `token_expiration` <= NOW();
+END$$
+DELIMITER ;
+
+-- Stored procedure for deleting expired login devices and performing any necessary logging
+DELIMITER $$
+CREATE PROCEDURE `DeleteExpiredLoginDevices` ()
+BEGIN
+    DECLARE expired_cursor CURSOR FOR
+        SELECT `id`, `user_id`
+        FROM `user_settings`
+        WHERE `device_name` IS NOT NULL AND `login_token_expiration` <= NOW();
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN expired_cursor;
+    expired_loop: LOOP
+        FETCH expired_cursor INTO @device_id, @user_id;
+        IF done THEN
+            LEAVE expired_loop;
+        END IF;
+
+        -- Perform any necessary logging or data retention here
+        -- Insert data into an audit log table, for example
+
+        -- Delete the expired login device record
+        DELETE FROM `user_settings` WHERE `id` = @device_id;
+
+        -- Also update user's last login device or other relevant information
+        -- UPDATE `users` SET `last_login_device` = @device_id WHERE `id` = @user_id;
+    END LOOP;
+
+    CLOSE expired_cursor;
+END$$
+DELIMITER ;
+
+future adjustment, enum every possible activity_type
+CREATE TABLE `activity_logs` (
+  `log_id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT,
+  `activity_type` ENUM('login', 'reactivation', ...),
+  `timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  -- Other relevant columns
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+);
+
+associate user location with post
+SELECT p.*, l.location_name
+FROM `posts` p
+JOIN `users` u ON p.`user_id` = u.`user_id`
+JOIN `locations` l ON u.`location_id` = l.`location_id`;
+
+retrieve locations associated with a specific user
+SELECT locations.*
+FROM locations
+INNER JOIN user_locations ON locations.id = user_locations.location_id
+WHERE user_locations.user_id = [user_id];
+
+CREATE TABLE `role_permissions` (
+  `role_id` int(11) NOT NULL,
+  `permission_id` int(11) NOT NULL,
+  PRIMARY KEY (`role_id`, `permission_id`)
+);
+
+CREATE TABLE `blocked_users` (
+  `user_id` int(11) NOT NULL,
+  `blocked_user_id` int(11) NOT NULL,
+  PRIMARY KEY (`user_id`, `blocked_user_id`)
+);
+
+
+makes me admin
+- Check if the "admin" role exists, and if not, insert it
+INSERT INTO roles (name, createdAt, updatedAt)
+VALUES ('admin', NOW(), NOW())
+ON DUPLICATE KEY UPDATE name=name;
+
+-- Get the ID of the "admin" role
+SET @adminRoleId = LAST_INSERT_ID();
+
+-- Assign the "admin" role to your user ID
+INSERT INTO user_roles (user_id, role_id, createdAt, updatedAt)
+VALUES (12, @adminRoleId, NOW(), NOW())
+ON DUPLICATE KEY UPDATE role_id=role_id;

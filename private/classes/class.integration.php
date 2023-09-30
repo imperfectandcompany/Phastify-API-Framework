@@ -36,7 +36,7 @@ class Integration {
         $data['user_id'] = $userId;
         
         // Define columns that can be inserted into
-        $allowedColumns = ['user_id', 'service', 'client_id', 'client_secret', 'access_token', 'token_type', 'refresh_token', 'token_expiration', 'status', 'data'];
+        $allowedColumns = ['user_id', 'service_id', 'client_id', 'client_secret', 'access_token', 'token_type', 'refresh_token', 'token_expiration', 'status', 'data'];
         
         // Check if unknown columns are present
         foreach ($data as $key => $value) {
@@ -77,7 +77,7 @@ class Integration {
         $data['id'] = $id;
 
         // Define columns that can be inserted into
-        $allowedColumns = ['id', 'user_id', 'service', 'client_id', 'client_secret', 'access_token', 'token_type', 'refresh_token', 'token_expiration', 'status', 'data'];
+        $allowedColumns = ['id', 'user_id', 'service_id', 'client_id', 'client_secret', 'access_token', 'token_type', 'refresh_token', 'token_expiration', 'status', 'data'];
 
         // Check if unknown columns are present
         foreach ($data as $key => $value) {
@@ -157,6 +157,53 @@ class Integration {
     
             $result = $this->dbConnection->viewSingleData($table, $select, $whereClause, $filterParams)['result'];
             return !empty($result);
+        }
+
+        // function to update integration visibility by id
+        public function updateIntegrationVisibility($integrationId, $data){
+            // Turn data into an array
+            $data = (array)$data;
+
+            // Add id to data
+            $data['id'] = $integrationId;
+
+            // Define columns that can be inserted into
+            $allowedColumns = ['show_to_followers', 'show_to_contacts'];
+            
+            // Check if unknown columns are present
+            foreach ($data as $key => $value) {
+                if (!in_array($key, $allowedColumns)) {
+                    // Handle unknown column error
+                    throw new Exception("Unknown column {$key} provided.", ERROR_BAD_REQUEST);
+                }
+            }
+
+            // Ensure ID exists. This is required for the WHERE clause.
+            if (!array_key_exists("id", $data)) {
+                // Handle unknown column error
+                throw new Exception("Required column id missing.", ERROR_BAD_REQUEST);
+            }
+
+            // Filter data to contain only allowed columns and ensure values are not empty
+            $filteredData = array_filter($data, function($value, $key) use ($allowedColumns) {
+                return in_array($key, $allowedColumns) && !empty($value);
+            }, ARRAY_FILTER_USE_BOTH);
+
+            $filterParams = makeFilterParams($filteredData);
+
+            $setParts = [];
+
+            foreach ($filteredData as $column => $value) {
+                if ($column != 'id') {  // Skip the id column for the SET clause
+                    $setParts[] = $column . ' = :' . $column;
+                }
+            }
+
+            $setClause = implode(", ", $setParts);
+
+            $whereClause = 'id = :id';
+
+            return $this->dbConnection->updateData('integrations', $setClause, $whereClause, $filterParams);
         }
 
 }

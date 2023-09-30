@@ -3,19 +3,12 @@ include_once($GLOBALS['config']['private_folder'].'/controllers/IntegrationContr
 
     class IntegrationControllerTestDouble extends IntegrationController {
         protected static $inputStream;
-        protected $dbConnection;
-
-        public function construct($dbConnection) {
-            parent::__construct($dbConnection);
-            $this->dbConnection = $dbConnection;
-        }
-    
 
         public static function setInputStream($input = 'php://input')
         {
             static::$inputStream = $input;
         }
-    
+
         protected static function getInputStream()
         {
             return static::$inputStream;
@@ -26,7 +19,6 @@ include_once($GLOBALS['config']['private_folder'].'/controllers/IntegrationContr
         }
 
         protected function getLastInsertedId() {
-            // You should implement this method based on your specific database connector class.
             $query = "SELECT LAST_INSERT_ID() as last_id";
             $result = $this->dbConnection->query($query);
             

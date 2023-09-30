@@ -1,5 +1,6 @@
     <?php
     include($GLOBALS['config']['private_folder'].'/classes/class.integration.php');
+    include($GLOBALS['config']['private_folder'].'/classes/class.service.php');
 
     class IntegrationController {
         
@@ -7,12 +8,14 @@
         protected $integration;
         protected $logger;
 
-        public function construct($dbConnection, $logger)
+        public function __construct($dbConnection, $logger)
         {
             $this->dbConnection = $dbConnection;
             $integration = new Integration($this->dbConnection);
+            $service = new Service($this->dbConnection);
             $this->integration = $integration;
             $this->logger = $logger;
+            $this->service = $service;
         }
         
         public function getAllIntegrations() {
@@ -43,8 +46,11 @@
             $integration = $this->integration;
 
             try {
-                $postBody = json_decode(file_get_contents("php://input"));
-                CheckInputFields(['service', 'client_id', 'client_secret', 'access_token', 'token_type'], $postBody);
+                $postBody = json_decode(static::getInputStream());
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    echo json_last_error_msg();
+                }
+                CheckInputFields(['service_id', 'client_id', 'client_secret', 'access_token', 'token_type', 'show_to_followers', 'show_to_contacts'], $postBody);
 
                 $result = $integration->createIntegrationForUser($GLOBALS['user_id'], $postBody);
         
@@ -61,7 +67,10 @@
         }
         
         public function updateIntegration($id) {
-            $postBody = json_decode(file_get_contents("php://input"));
+            $postBody = json_decode(static::getInputStream());
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                echo json_last_error_msg();
+            }
 
             $integration = $this->integration;
 
@@ -108,6 +117,35 @@
                 sendResponse('error', ['message' => 'Unable to delete integration'], ERROR_INTERNAL_SERVER);
             }
         }
+
+        // Add a new function to set the service visibility
+        public function updateIntegrationVisibility($integrationId) {
+            $postBody = json_decode(static::getInputStream());
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                echo json_last_error_msg();
+            }
+
+            CheckInputFields(['show_to_followers', 'show_to_contacts'], $postBody);
+
+            // Check if the service exists
+            if (!$this->integration->doesIntegrationExist($integrationId)) {
+                sendResponse('error', ['message' => 'Integration ID does not exist'], ERROR_NOT_FOUND);
+                return false;
+            }
+
+            // Perform authorization check 
+            if (!$this->integration->doesIntegrationBelongToUser($integrationId, $GLOBALS['user_id'])) {
+                sendResponse('error', ['message' => 'Unauthorized to update this integration'], ERROR_FORBIDDEN);
+                return;
+            }
+
+            // Update user integration visibility
+            if ($this->integration->updateIntegrationVisibility($integrationId, $postBody)) {
+                sendResponse('success', ['message' => 'Service visibility updated'], SUCCESS_OK);
+            } else {
+                sendResponse('error', ['message' => 'Unable to update service visibility'], ERROR_INTERNAL_SERVER);
+            }
+        }
         
         public function refreshIntegrationData($id) {
             $integration = $this->integration;
@@ -123,6 +161,11 @@
                 echo json_encode(array('status' => 'error', 'message' => 'Unable to refresh integration data'));
                 http_response_code(500);  // Internal Server Error
             }
+        }
+
+        protected static function getInputStream()
+        {
+            return file_get_contents('php://input');
         }
         
     }
