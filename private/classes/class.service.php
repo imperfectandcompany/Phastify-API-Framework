@@ -37,19 +37,19 @@ class Service
                 sendResponse('error', ['message' => $error], ERROR_INVALID_INPUT);
                 return;
             }
-    
+
             // Check if the service with the same name already exists
             if ($this->doesServiceNameExist($postBody["name"])) {
                 throwError("Service with the same name already exists");
             }
-    
+
             // Check if the service with the same URL already exists
             if ($this->doesServiceUrlExist($postBody["url"])) {
                 throwError('Service with the same URL already exists');
             }
-    
+
             $result = $this->insertServiceData($postBody);
-    
+
             if ($result) {
                 sendResponse('success', ['message' => 'Service Added'], SUCCESS_CREATED);
                 return true;
@@ -64,7 +64,7 @@ class Service
     }
 
     // Insert service data into the database
-    private function insertServiceData($data)
+    public function insertServiceData($data)
     {
         // Define columns that can be inserted into
         $allowedColumns = ['name', 'description', 'logo', 'url', 'available', 'client_id'];
@@ -111,8 +111,28 @@ class Service
         return $result;
     }
 
+
+    public function getServiceById($id)
+    {
+        $table = 'services';
+        $select = '*';
+        $whereClause = 'WHERE id = :id';
+        $params = ['id' => $id];
+        $filterParams = makeFilterParams($params);
+
+        return $this->dbConnection->viewSingleData($table, $select, $whereClause, $filterParams)['result'];
+    }
+
+    public function getAllServices()
+    {
+        $table = 'services';
+        $select = '*';
+
+        return $this->dbConnection->viewData($table, $select)["results"];
+    }
+
     // Check if a service with the same URL exists
-    private function doesServiceUrlExist($url)
+    public function doesServiceUrlExist($url)
     {
         // @role guard - only admins can create a service (future update, create decorators for functions)
         if (!$this->roles->isUserAdmin($GLOBALS["user_id"])) {
@@ -130,7 +150,7 @@ class Service
     }
 
     // Check if a service with the same URL exists
-    private function doesServiceNameExist($name)
+    public function doesServiceNameExist($name)
     {
         // @role guard - only admins can create a service (future update, create decorators for functions)
         if (!$this->roles->isUserAdmin($GLOBALS["user_id"])) {
@@ -145,13 +165,13 @@ class Service
 
         $result = $this->dbConnection->viewSingleData($table, $select, $whereClause, $filterParams)['result'];
         return !empty($result);
-    }    
+    }
 
     public function getNewlyCreatedServiceId()
     {
         $lastInserted = $this->dbConnection->getConnection()->lastInsertId();
         // @role guard - only admins can create a service (future update, create decorators for functions)
-        if(!$this->roles->isUserAdmin($GLOBALS["user_id"])) {
+        if (!$this->roles->isUserAdmin($GLOBALS["user_id"])) {
             sendResponse('error', ['message' => 'Unauthorized to get newly created service id'], ERROR_FORBIDDEN);
             return;
         }
@@ -159,7 +179,7 @@ class Service
     }
 
     // Check if a service with the same URL exists
-    private function doesServiceIdExist($id)
+    public function doesServiceIdExist($id)
     {
         // @role guard - only admins can create a service (future update, create decorators for functions)
         if (!$this->roles->isUserAdmin($GLOBALS["user_id"])) {
@@ -174,9 +194,10 @@ class Service
 
         $result = $this->dbConnection->viewSingleData($table, $select, $whereClause, $filterParams)['result'];
         return !empty($result);
-    }    
+    }
 
-    public function deleteService($id) {
+    public function deleteService($id)
+    {
         // Check if service exists before authorization check.
         if (!$this->doesServiceIdExist($id)) {
             sendResponse('error', ['message' => 'service ID does not exist'], ERROR_NOT_FOUND);
@@ -184,7 +205,7 @@ class Service
         }
 
         // @role guard - only admins can create a service (future update, create decorators for functions)
-        if(!$this->roles->isUserAdmin($GLOBALS["user_id"])) {
+        if (!$this->roles->isUserAdmin($GLOBALS["user_id"])) {
             sendResponse('error', ['message' => 'Unauthorized to delete service id'], ERROR_FORBIDDEN);
             return false;
         }
@@ -198,13 +219,14 @@ class Service
         }
     }
 
-        // Delete an integration by ID
-        public function deleteServiceById($id) {
-            $whereClause = 'WHERE id = :id';
-            $filterParams = makeFilterParams($id);
-    
-            return $this->dbConnection->deleteData('services', $whereClause, $filterParams);
-        }
+    // Delete an integration by ID
+    public function deleteServiceById($id)
+    {
+        $whereClause = 'WHERE id = :id';
+        $filterParams = makeFilterParams($id);
+
+        return $this->dbConnection->deleteData('services', $whereClause, $filterParams);
+    }
 
     protected function getLastInsertedId()
     {
@@ -225,10 +247,10 @@ class Service
         }
     }
 
-        protected static function getInputStream()
-        {
-            return file_get_contents('php://input');
-        }
+    protected static function getInputStream()
+    {
+        return file_get_contents('php://input');
+    }
 
 }
 

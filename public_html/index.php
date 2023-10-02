@@ -278,6 +278,24 @@ $router->enforceParameters('/post/:id/comment', 'POST', [
 $router->add('/comment/:id', 'CommentController@deleteComment', 'DELETE');
 $router->addDocumentation('/comment/:id', 'DELETE', 'Deletes a comment.');
 
+// Create a new service (POST request)
+$router->add('/services', 'ServiceController@createService', 'POST');
+$router->addDocumentation('/services', 'POST', 'Creates a new service.');
+$router->enforceParameters('/services', 'POST', [
+    'name' => 'body',
+    'description' => 'body',
+    'client_id' => 'body'
+    // Include other required parameters here
+]);
+
+$router->add('/services', 'ServiceController@getAllServices', 'GET');
+$router->addDocumentation('/services', 'GET', 'Get all available services (admin sees all, non-admin sees available services).');
+
+$router->add('/services/:id', 'ServiceController@getServiceById', 'GET');
+$router->addDocumentation('/services/:id', 'GET', 'Get service details by ID (admin sees client_id, non-admin does not).');
+
+$router->add('/services/:id', 'ServiceController@deleteServiceById', 'DELETE');
+$router->addDocumentation('/services/:id', 'DELETE', 'Delete a service by ID (admin only).');
 
 //POST /logout
 //Description: Logs out the user from the current device and invalidates the token unless all_devices is passed as true, in which case, the user is logged out from all devices, and all tokens are invalidated.
@@ -304,6 +322,9 @@ $router->add('/logout/:deviceToken', 'UserController@logoutAllParam', 'GET');
 
 //implement next..
 $router->add('/logout/:deviceToken/:param2/:optionalParam', 'UserController@theOnewokring', 'GET');
+
+
+
 
 if($GLOBALS['config']['devmode'] == 1){
     $router->add('/list-routes', 'DevController@listRoutes', 'GET');

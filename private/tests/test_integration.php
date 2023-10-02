@@ -1,4 +1,10 @@
 <?php
+/* 
+   This is a PHP test file that demonstrates how to write tests for a custom integration controller.
+   We are using TDD (Test-Driven Development) and BDD (Business-Driven Development) principles here.
+   The purpose of these tests is to ensure that the integration controller functions correctly.
+*/
+
 /* other file:
 function customAssert($condition, $message) {
     global $currentTest;

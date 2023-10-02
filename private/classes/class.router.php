@@ -250,6 +250,13 @@ class Router {
                             case 'body':
                                 // Extract parameters from the request body (e.g., JSON)
                                 $postBody = json_decode(file_get_contents("php://input"));
+                                if ($postBody === null) {
+                                    // Handle JSON decoding error
+                                    $this->handleError("Error decoding JSON data in request body");
+                                    return;
+                                }
+                                
+                                // Now check for the property
                                 if (property_exists($postBody, $paramName)) {
                                     $routeBodyParams[$paramName] = $postBody->$paramName;
                                 } else {

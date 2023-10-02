@@ -223,9 +223,9 @@ class DatabaseConnector
      *
      * @return array|false An array with a single database row that matches the query parameters or false on error
      */
-    public function viewSingleData($table, $select = '*', $query = null, $filter_params = null)
+    public function viewSingleData($table, $select = '*', $where = null, $filter_params = null)
     {
-        return $this->runQuery("single", 'SELECT ' . $select . ' FROM ' . $table . ' ' . $query . ' LIMIT 1', $filter_params);
+        return $this->runQuery("single", 'SELECT ' . $select . ' FROM ' . $table . ' ' . $where . ' LIMIT 1', $filter_params);
     }
 
     /**
