@@ -180,8 +180,13 @@ $router->add('/integrations', 'IntegrationController@createIntegration', 'POST')
 $router->addDocumentation('/integrations', 'POST', 'Creates a new integration for the authenticated user.');
 
 // Update an existing integration for the authenticated user
-$router->add('/integrations/:id', 'IntegrationController@updateIntegration', 'PUT', [
-    'service' => 'body',   // Service comes from the request body
+$router->add('/integrations/:id', 'IntegrationController@updateIntegration', 'PUT');
+$router->addDocumentation('/integrations/:id', 'PUT', 'Updates an existing integration for the authenticated user.');
+$router->add('/integrations/:id/visibility', 'IntegrationController@updateIntegrationVisibility', 'PUT');
+$router->addDocumentation('/integrations/:id/visibility', 'PUT', 'Update integration visibility (admin only).');
+$router->enforceParameters('/integrations/:id/visibility', 'PUT', [
+    'show_to_followers' => 'body',
+    'show_to_contacts' => 'body',
 ]);
 
 // Delete an existing integration for the authenticated user
@@ -296,6 +301,9 @@ $router->addDocumentation('/services/:id', 'GET', 'Get service details by ID (ad
 
 $router->add('/services/:id', 'ServiceController@deleteServiceById', 'DELETE');
 $router->addDocumentation('/services/:id', 'DELETE', 'Delete a service by ID (admin only).');
+
+
+
 
 //POST /logout
 //Description: Logs out the user from the current device and invalidates the token unless all_devices is passed as true, in which case, the user is logged out from all devices, and all tokens are invalidated.

@@ -126,7 +126,7 @@
         }
 
         // Add a new function to set the service visibility
-        public function updateIntegrationVisibility($integrationId) {
+        public function updateIntegrationVisibility(int $integrationId) {
             $postBody = json_decode(static::getInputStream(), true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 echo json_last_error_msg();
