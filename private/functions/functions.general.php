@@ -120,11 +120,27 @@ function sendResponse($status, $data, $httpCode) {
  * Returns an error message if any of the fields are missing.
  */
 function checkInputFields($inputFields, $postBody) {
+    $returnFlag = true;
     foreach ($inputFields as $field) {
         if (!isset($postBody->{$field}) || empty($postBody->{$field})) {
             $error = "Error: " . ucfirst($field) . " field is required";
             sendResponse('error', ['message' => $error], ERROR_INVALID_INPUT);
-            return false;
+            $returnFlag = false;
         }
     }
+    return $returnFlag;
+}
+
+/**
+ * Utility function to check if the given input fields are set and not empty or null.
+ * Returns an array of missing fields or an empty array if all fields are present.
+ */
+function missingFields($inputFields, $postBody) {
+    $missingFields = [];
+    foreach ($inputFields as $field) {
+        if (!isset($postBody[$field]) || $postBody[$field] === null || $postBody[$field] === '') {
+            $missingFields[] = $field;
+        }
+    }
+    return $missingFields;
 }

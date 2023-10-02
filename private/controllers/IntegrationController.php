@@ -46,19 +46,26 @@
             $integration = $this->integration;
 
             try {
-                $postBody = json_decode(static::getInputStream());
+                $postBody = json_decode(static::getInputStream(), true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     echo json_last_error_msg();
                 }
-                CheckInputFields(['service_id', 'client_id', 'client_secret', 'access_token', 'token_type', 'show_to_followers', 'show_to_contacts'], $postBody);
+                $missingFields = missingFields(['service_id', 'client_secret', 'access_token', 'token_type', 'show_to_followers', 'show_to_contacts'], $postBody);
+
+                if (!empty($missingFields)) {
+                    $error = 'Error: ' . implode(', ', $missingFields) . ' field(s) is/are required';
+                    sendResponse('error', ['message' => $error], ERROR_INVALID_INPUT);
+                    return;
+                }
 
                 $result = $integration->createIntegrationForUser($GLOBALS['user_id'], $postBody);
         
                 if ($result) {
-                    echo json_encode(array('status' => 'success', 'message' => 'Integration created'));
-                    http_response_code(SUCCESS_CREATED);
+                    sendResponse('success', ['message' => 'Integration created'], SUCCESS_CREATED);
+                    return true;
                 } else {
-                    throw new Exception('Unable to create integration', ERROR_INTERNAL_SERVER);
+                    throwError('Unable to create integration');
+                    return false;
                 }
             } catch (Exception $e) {
                 echo json_encode(array('status' => 'error', 'message' => $e->getMessage()));
@@ -120,7 +127,7 @@
 
         // Add a new function to set the service visibility
         public function updateIntegrationVisibility($integrationId) {
-            $postBody = json_decode(static::getInputStream());
+            $postBody = json_decode(static::getInputStream(), true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 echo json_last_error_msg();
             }
@@ -167,6 +174,8 @@
         {
             return file_get_contents('php://input');
         }
+
+
         
     }
 

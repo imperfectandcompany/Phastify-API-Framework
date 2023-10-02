@@ -1,4 +1,4 @@
-<?php            
+<?php
 
 
             include_once($GLOBALS['config']['private_folder'].'/tests/test_post.php');
@@ -73,6 +73,7 @@
                 "testUserCanAddService",
                 "testUserCanAddIntegration",
                 "testUserCanUpdateIntegrationSettings",
+                "testUserCanCleanUpScenerio"
             ];
 
             $tests = [

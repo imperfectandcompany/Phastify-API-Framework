@@ -24,8 +24,7 @@ class UserController {
     private function checkInputFields($inputFields, $postBody) {
         foreach ($inputFields as $field) {
             if (!isset($postBody->{$field}) || empty($postBody->{$field})) {
-                $error = "Error: " . ucfirst($field) . " field is required";
-                echo json_encode(array('status' => 'error', 'message' => $error));
+                throwError("Error: " . ucfirst($field) . " field is required");
                 http_response_code(ERROR_BAD_REQUEST);
                 exit;
             }

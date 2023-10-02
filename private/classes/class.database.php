@@ -32,9 +32,10 @@
  *
  * @package Postogon
  */
-class DatabaseConnector {
+class DatabaseConnector
+{
     private $dbConnection = null;
-    
+
     /**
      * DatabaseConnector constructor.
      *
@@ -47,28 +48,29 @@ class DatabaseConnector {
      *
      * @return bool Returns false if any of the required connection parameters are missing
      */
-    public function __construct($host, $port, $db, $user, $pass, $charset) {
+    public function __construct($host, $port, $db, $user, $pass, $charset)
+    {
         if (!isset($host, $port, $db, $user, $pass, $charset)) {
             $GLOBALS['messages']['errors'][] = "Warning: DB connection is missing variables.";
             return false;
         }
         $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
-        $options = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, PDO::ATTR_EMULATE_PREPARES => false, ];
+        $options = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, PDO::ATTR_EMULATE_PREPARES => false,];
         try {
             $this->dbConnection = new PDO($dsn, $user, $pass, $options);
-        }
-        catch(\PDOException $e) {
+        } catch (\PDOException $e) {
             $GLOBALS['messages']['errors'][] = $e->getMessage();
             return false;
         }
     }
-    
+
     /**
      * Returns the database connection object.
      *
      * @return PDO The PDO database connection object
      */
-    public function getConnection() {
+    public function getConnection()
+    {
         return $this->dbConnection;
     }
 
@@ -81,7 +83,8 @@ class DatabaseConnector {
      *
      * @return int|false Returns the count of rows or false on error
      */
-    public function viewCount($table, $filter_params = null, $query = null) {
+    public function viewCount($table, $filter_params = null, $query = null)
+    {
         try {
             $stmt = $this->dbConnection->prepare("SELECT * FROM $table $query");
             if ($filter_params) {
@@ -92,8 +95,7 @@ class DatabaseConnector {
             }
             $stmt->execute();
             return $stmt->rowCount();
-        }
-        catch(\PDOException $e) {
+        } catch (\PDOException $e) {
             $GLOBALS['messages']['errors'][] = $e->getMessage();
             return false;
         }
@@ -107,27 +109,77 @@ class DatabaseConnector {
      *
      * @return array|false Returns an array of rows on success or false on error
      */
-    public function query($query, $params = array()) {
-        try{
+    public function query($query, $params = array())
+    {
+
+        // Convert a single value to an array
+        if (!is_array($params)) {
+            $params = array($params);
+        }
+
+        $filterParams = array();
+
+        foreach ($params as $value) {
+            $type = PDO::PARAM_STR; // Default to string type
+
+            if (is_int($value)) {
+                $type = PDO::PARAM_INT;
+            } elseif (is_bool($value)) {
+                $type = PDO::PARAM_BOOL;
+            } elseif (is_null($value)) {
+                $type = PDO::PARAM_NULL;
+            }
+
+            $filterParams[] = array('value' => $value, 'type' => $type);
+        }
+
+        try {
             $statement = $this->dbConnection->prepare($query);
-            $statement->execute($params);
+            if ($filterParams) {
+                foreach ($filterParams as $key => $data) {
+                    $key++;
+                    $statement->bindParam($key, $data['value'], $data['type']);
+                }
+            }
+            $statement->execute();
+
+
             //if the first keyword in the query is select, then run this.
-            if (explode(' ', $query) [0] == 'SELECT') {
+            if (explode(' ', $query)[0] == 'SELECT' && explode(' ', $query)[1] != 'count(*)') {
+
                 $data = $statement->fetchAll();
                 return $data;
             }
+
+            //if the second keyword in the query is select, then run this.
+            if (explode(' ', $query)[0] == 'SELECT' && explode(' ', $query)[1] == 'count(*)') {
+                $data = $statement->fetch();
+                $data = $data['total'];
+                return $data;
+            }
+
         } catch (Exception $e) {
+            // Log the executed query and parameters (for debugging)
+            throwWarning('Executed query: ' . $query);
+            throwWarning('Parameters: ' . print_r($params, true));
             $GLOBALS['messages']['errors'][] = '<b>Error: </b>' . $e->getMessage();
             return false;
         } catch (\PDOException $e) {
+            // Log the executed query and parameters (for debugging)
+            throwWarning('Executed query: ' . $query);
+            throwWarning('Parameters: ' . print_r($params, true));
             $GLOBALS['messages']['errors'][] = '<b>INTERNAL ERROR: </b>' . $e->getMessage();
             return false;
         } catch (PDOException $e) {
+            // Log the executed query and parameters (for debugging)
+            throwWarning('Executed query: ' . $query);
+            throwWarning('Parameters: ' . print_r($params, true));
             $GLOBALS['messages']['errors'][] = '<b>INTERNAL ERROR: </b>' . $e->getMessage();
             return false;
         }
     }
-    
+
+
     /**
      * Retrieves rows from a specified table.
      *
@@ -138,7 +190,8 @@ class DatabaseConnector {
      *
      * @return array|false An array of database rows that match the query parameters or false on error
      */
-    public function viewData($table, $select = '*', $query = null, $filter_params = null) {
+    public function viewData($table, $select = '*', $query = null, $filter_params = null)
+    {
         try {
             $stmt = $this->dbConnection->prepare("SELECT $select FROM $table $query");
             if ($filter_params) {
@@ -149,14 +202,12 @@ class DatabaseConnector {
             }
             $stmt->execute();
             return array("count" => $stmt->rowCount(), "results" => $stmt->fetchAll());
-        }
-        catch(Exception $e) {
-        echo $e->getMessage();
+        } catch (Exception $e) {
+            echo $e->getMessage();
 
             $GLOBALS['messages']['errors'][] = '<b>Error: </b>' . $e->getMessage();
             return false;
-        }
-        catch(\PDOException $e) {
+        } catch (\PDOException $e) {
             $GLOBALS['messages']['errors'][] = '<b>INTERNAL ERROR: </b>' . $e->getMessage();
             return false;
         }
@@ -171,8 +222,9 @@ class DatabaseConnector {
      * @param array|null $filter_params An optional array of filter parameters to use in the query
      *
      * @return array|false An array with a single database row that matches the query parameters or false on error
-     */    
-    public function viewSingleData($table, $select = '*', $query = null, $filter_params = null) {
+     */
+    public function viewSingleData($table, $select = '*', $query = null, $filter_params = null)
+    {
         return $this->runQuery("single", 'SELECT ' . $select . ' FROM ' . $table . ' ' . $query . ' LIMIT 1', $filter_params);
     }
 
@@ -185,8 +237,9 @@ class DatabaseConnector {
      * @param array|null $filter_params An optional array of filter parameters to use in the query
      *
      * @return array|false An array with the ID of the last inserted row or false on error
-     */    
-    public function insertData($table, $rows, $values, $filter_params = null) {
+     */
+    public function insertData($table, $rows, $values, $filter_params = null)
+    {
         return $this->runQuery("insert", 'INSERT INTO ' . $table . ' (' . $rows . ') VALUES (' . $values . ')', $filter_params);
     }
 
@@ -202,7 +255,8 @@ class DatabaseConnector {
      *
      * @return array|false An array with the ID of the last inserted row or an array with the ID of the row that was updated, or false on error
      */
-    public function insertDataUnique($table, $rows, $values, $update_values, $filter_params = null) {
+    public function insertDataUnique($table, $rows, $values, $update_values, $filter_params = null)
+    {
         return $this->runQuery("insert", 'INSERT INTO ' . $table . ' (' . $rows . ') VALUES (' . $values . ') ON DUPLICATE KEY UPDATE ' . $update_values, $filter_params);
         /*INSERT INTO t1 (a,b,c) VALUES (1,2,3),(4,5,6)  ON DUPLICATE KEY UPDATE c=VALUES(a)+VALUES(b);*/
     }
@@ -217,9 +271,10 @@ class DatabaseConnector {
      *
      * @return true|false True if the data was updated successfully, false otherwise
      */
-    public function updateData($table, $setClause, $whereClause =null, $filter_params = null) {
+    public function updateData($table, $setClause, $whereClause = null, $filter_params = null)
+    {
         $whereClause = $whereClause !== null ? ' WHERE ' . $whereClause : null;
-        $query =  'UPDATE ' . $table . ' SET ' . $setClause . $whereClause;
+        $query = 'UPDATE ' . $table . ' SET ' . $setClause . $whereClause;
         return $this->runQuery("update", $query, $filter_params);
     }
 
@@ -232,7 +287,8 @@ class DatabaseConnector {
      *
      * @return true|false True if the data was deleted successfully, false otherwise
      */
-    public function deleteData($table, $rows, $filter_params = null) {
+    public function deleteData($table, $rows, $filter_params = null)
+    {
         return $this->runQuery("delete", 'DELETE FROM ' . $table . ' ' . $rows, $filter_params);
     }
 
@@ -245,7 +301,8 @@ class DatabaseConnector {
      *
      * @return array|true|false An array with the ID of the last inserted row, or an array with the ID of the row that was updated, or an array with a single database row that matches the query parameters, or true/false depending on the query type
      */
-    public function runQuery($type, $query, $filter_params) {
+    public function runQuery($type, $query, $filter_params)
+    {
         try {
             $stmt = $this->dbConnection->prepare($query);
             if ($filter_params) {
@@ -258,28 +315,26 @@ class DatabaseConnector {
             switch ($type) {
                 case "single":
                     return array("count" => $stmt->rowCount(), "result" => $stmt->fetch());
-                break;
+                    break;
                 case "insert": //insert
                     return array("insertID" => $this->dbConnection->lastInsertId());
-                break;
+                    break;
                 case "update": //insert
                     return array("insertID" => $this->dbConnection->lastInsertId());
                     return true;
-                break;
+                    break;
                 case "delete": //insert
                     return array("insertID" => $this->dbConnection->lastInsertId());
                     return true;
-                break;
+                    break;
                 default:
                     throw new Exception('No query type was specified.');
             }
-        }
-        catch(Exception $e) {
+        } catch (Exception $e) {
             echo $e->getMessage();
             $GLOBALS['messages']['errors'][] = '<b>Error: </b>' . $e->getMessage();
             return false;
-        }
-        catch(\PDOException $e) {
+        } catch (\PDOException $e) {
             if ($e->getCode() === '23000') {
                 $GLOBALS['messages']['errors'][] = '<b>UNIQUE CONSTRAINT: </b>' . $e->getMessage();
             } else {

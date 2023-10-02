@@ -21,18 +21,19 @@
  *     array('value' => 123, 'type' => PDO::PARAM_INT)
  *   )
  */
-function makeFilterParams($paramValues) {
+function makeFilterParams($paramValues)
+{
 
     // Convert a single value to an array
     if (!is_array($paramValues)) {
         $paramValues = array($paramValues);
     }
-    
+
     $filterParams = array();
-    
+
     foreach ($paramValues as $value) {
         $type = PDO::PARAM_STR; // Default to string type
-        
+
         if (is_int($value)) {
             $type = PDO::PARAM_INT;
         } elseif (is_bool($value)) {
@@ -40,10 +41,10 @@ function makeFilterParams($paramValues) {
         } elseif (is_null($value)) {
             $type = PDO::PARAM_NULL;
         }
-        
+
         $filterParams[] = array('value' => $value, 'type' => $type);
     }
-    
+
     return $filterParams;
 }
 
@@ -55,11 +56,12 @@ function makeFilterParams($paramValues) {
  * 
  * @return string The generated placeholders joined by commas.
  */
-function makePlaceholders($keys, $placeholder = '?') {
+function makePlaceholders($keys, $placeholder = '?')
+{
     // Convert a single value to an array
     if (!is_array($keys)) {
         $keys = array($keys);
     }
-    
+
     return implode(', ', array_fill(0, count($keys), $placeholder));
 }

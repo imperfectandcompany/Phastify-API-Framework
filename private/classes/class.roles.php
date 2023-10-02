@@ -382,29 +382,30 @@ class Roles
      */
     public function userHasRoleByName($userId, $roleName)
     {
-        // Modify the query to check by role name instead of role ID
-        $query = "
+        try {
+            $query = "
             SELECT COUNT(*) AS count
             FROM user_roles AS ur
             JOIN roles AS r ON ur.role_id = r.id
             WHERE ur.user_id = :user_id AND r.name = :role_name
-        ";
+            ";
     
-        $params = [
-            ':user_id' => [$userId, PDO::PARAM_INT],
-            ':role_name' => [$roleName, PDO::PARAM_STR]
-        ];
-    
-        $result = $this->dbConnection->query($query, $params);
-    
-        // Check if $result is null or not an array
-        if ($result === null || !is_array($result)) {
-            return false; // Handle the error or return false as appropriate
-        }
-    
-        // Check if $result has elements
-        if (isset($result[0]) && isset($result[0]['count']) && $result[0]['count'] > 0) {
-            return true; // User has the role
+        $query = 'SELECT COUNT(*) AS count FROM user_roles AS ur JOIN roles AS r ON ur.role_id = r.id WHERE ur.user_id = ? AND r.name = ?';
+        $paramsArray = array($GLOBALS["user_id"], $roleName);
+        $result = $this->dbConnection->query($query, $paramsArray);
+                // Check if $result is null or not an array
+            if ($result === null || !is_array($result)) {
+                // return false in a sec
+                throwError("Database query failed or returned non-array result.");
+                return false;
+            }
+            
+            if (isset($result[0]) && isset($result[0]['count']) && $result[0]['count'] > 0) {
+                return true; // User has the role
+            }
+        } catch (Exception $e) {
+            throwError("Error: " . $e->getMessage());
+            return false;
         }
     
         return false; // User does not have the role

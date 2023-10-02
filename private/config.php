@@ -3,6 +3,7 @@
 //Global config variables
 $GLOBALS['config']['url'] = "https://postogon.com";
 $GLOBALS['config']['avatar_url'] = "https://cdn.postogon.com/assets/img/profile_pictures";
+$GLOBALS['config']['service_url'] = "https://cdn.postogon.com/assets/img/service_logos";
 $GLOBALS['config']['avatar_folder'] = "/usr/www/igfastdl/postogon-cdn/assets/img/profile_pictures";
 $GLOBALS['config']['service_folder'] = "/usr/www/igfastdl/postogon-cdn/assets/img/service_logos";
 $GLOBALS['config']['private_folder'] = "/usr/www/igfastdl/postogon-api/private";

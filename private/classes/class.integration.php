@@ -36,7 +36,7 @@ class Integration {
         $data['user_id'] = $userId;
         
         // Define columns that can be inserted into
-        $allowedColumns = ['user_id', 'service_id', 'client_id', 'client_secret', 'access_token', 'token_type', 'refresh_token', 'token_expiration', 'status', 'data'];
+        $allowedColumns = ['user_id', 'service_id', 'client_id', 'client_secret', 'access_token', 'token_type', 'refresh_token', 'token_expiration', 'status', 'data', 'show_to_followers', 'show_to_contacts'];
         
         // Check if unknown columns are present
         foreach ($data as $key => $value) {
@@ -56,12 +56,10 @@ class Integration {
         $values = ':' . implode(", :", array_keys($filteredData));
         
         $filterParams = makeFilterParams($filteredData); // make sure this function is accessible here
-        
-        // This assumes the insertData method returns true/false based on success. 
-        // Modify as needed if it returns something different.
 
         if (!$this->dbConnection->insertData('integrations', $rows, $values, $filterParams)) {
             throw new Exception('Failed to insert data into the database.', ERROR_INTERNAL_SERVER);
+            return;
         }
         
         return true;
@@ -77,7 +75,7 @@ class Integration {
         $data['id'] = $id;
 
         // Define columns that can be inserted into
-        $allowedColumns = ['id', 'user_id', 'service_id', 'client_id', 'client_secret', 'access_token', 'token_type', 'refresh_token', 'token_expiration', 'status', 'data'];
+        $allowedColumns = ['id', 'user_id', 'service_id', 'client_id', 'client_secret', 'access_token', 'token_type', 'refresh_token', 'token_expiration', 'status', 'data', 'show_to_followers', 'show_to_contacts'];
 
         // Check if unknown columns are present
         foreach ($data as $key => $value) {
