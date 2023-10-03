@@ -12,6 +12,16 @@
 
             include_once($GLOBALS['config']['private_folder'].'/classes/class.testRunner.php');
             include_once($GLOBALS['config']['private_folder'].'/classes/class.logger.php');
+            //include($GLOBALS['config']['private_folder'].'/structures/create_constants_structure.php');
+            // set up test database connection
+            $dbConnection = new DatabaseConnector(
+                $GLOBALS['db_conf']['db_host'],
+                $GLOBALS['db_conf']['port'],
+                $GLOBALS['db_conf']['db_db_test'],
+                $GLOBALS['db_conf']['db_user'],
+                $GLOBALS['db_conf']['db_pass'],
+                $GLOBALS['db_conf']['db_charset']
+            );
             $logger = new Logger($dbConnection);
             // Initialize the Controller object once
             $controllers = [

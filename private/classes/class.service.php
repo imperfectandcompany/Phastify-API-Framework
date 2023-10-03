@@ -160,7 +160,7 @@ class Service
         $table = 'services';
         $select = 'id';
         $whereClause = 'WHERE name = :name';
-        $params = ['url' => $name];
+        $params = ['name' => $name];
         $filterParams = makeFilterParams($params);
 
         $result = $this->dbConnection->viewSingleData($table, $select, $whereClause, $filterParams)['result'];

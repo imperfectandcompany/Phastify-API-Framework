@@ -52,6 +52,10 @@ $dbConnection = new DatabaseConnector(
 
 require_once $GLOBALS['config']['private_folder'].'/classes/class.router.php';
 
+// get an instance of the Devmode class
+$devMode = new Dev($dbConnection);
+$GLOBALS['config']['devmode'] = $devMode->getDevModeStatus();
+
 require("./auth.php");
 // check if token is provided in the request header or query parameter or default to dev_mode_token if dev mode is enabled
 $token = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : '';
@@ -62,9 +66,6 @@ if (empty($token)) {
 // authenticate the user
 $result = authenticate_user($token, $dbConnection);
 
-    // get an instance of the Devmode class
-    $devMode = new Dev($dbConnection);
-    $GLOBALS['config']['devmode'] = $devMode->getDevModeStatus();
 
 
 
@@ -92,6 +93,13 @@ if ($result['status'] === 'error') {
     
     // create a new instance for unauthenticated routes from router class
     $notAuthenticatedRouter = new Router();
+
+    if($GLOBALS['config']['devmode'] == 1){
+        $notAuthenticatedRouter->add('/list-routes', 'DevController@listRoutes', 'GET');
+        $notAuthenticatedRouter->add('/admin/dashboard', 'DevController@loadAdminDashboard', 'GET');
+        $notAuthenticatedRouter->add('/admin/login', 'DevController@loadAdminLogin', 'GET');
+        // TODO: LIST CONSTANTS ENDPOINT
+    }
 
     if($GLOBALS['config']['devmode'] == 1){
         include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');  
@@ -131,11 +139,6 @@ include_once($GLOBALS['config']['private_folder'].'/data/user.php');
 
 // if the user is authenticated, create a new instance of the Router class and dispatch the incoming request
 $router = new Router();
-
-// get an instance of the Devmode class
-$devMode = new Dev($dbConnection);
-$GLOBALS['config']['devmode'] = $devMode->getDevModeStatus();
-$GLOBALS['config']['testmode'] = 1; //This disables testing
 
 // Fetch the public timeline (POST request)
 $router->add('/timeline/publicTimeline', 'TimelineController@fetchPublicTimeline', 'POST');
@@ -302,9 +305,6 @@ $router->addDocumentation('/services/:id', 'GET', 'Get service details by ID (ad
 $router->add('/services/:id', 'ServiceController@deleteServiceById', 'DELETE');
 $router->addDocumentation('/services/:id', 'DELETE', 'Delete a service by ID (admin only).');
 
-
-
-
 //POST /logout
 //Description: Logs out the user from the current device and invalidates the token unless all_devices is passed as true, in which case, the user is logged out from all devices, and all tokens are invalidated.
 //Request Body: {
@@ -332,23 +332,23 @@ $router->add('/logout/:deviceToken', 'UserController@logoutAllParam', 'GET');
 $router->add('/logout/:deviceToken/:param2/:optionalParam', 'UserController@theOnewokring', 'GET');
 
 
-
-
 if($GLOBALS['config']['devmode'] == 1){
     $router->add('/list-routes', 'DevController@listRoutes', 'GET');
-
+    $router->add('/admin/dashboard', 'DevController@loadAdminDashboard', 'GET');
+    $router->add('/admin/dashboard', 'DevController@loadAdminDashboard', 'POST');
+    $router->add('/admin/login', 'DevController@loadAdminLogin', 'GET');
+    $router->add('/admin/login', 'DevController@loadAdminLogin', 'POST');    
     // TODO: LIST CONSTANTS ENDPOINT
 }
 
-$GLOBALS['config']['testmode'] = 0; //This enables testing
 //dispatch router since authentication and global variables are set!
 $router->dispatch($GLOBALS['url_loc'], $dbConnection, $GLOBALS['config']['devmode']);
 // Check if we're in devmode
 if($GLOBALS['config']['devmode'] == 1){
+    $GLOBALS['config']['testmode'] = 1; //This enables testing
     include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');  
 }
 
-$GLOBALS['config']['testmode'] = 1; //This enables testing
 
 if ($GLOBALS['config']['devmode'] && $GLOBALS['config']['testmode']) {
     // Run testing script

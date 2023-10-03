@@ -19,8 +19,8 @@ class Dev {
     }
 
     public function getDevModeStatus(){
-        $result = $this->dbObject->viewSingleData("app_settings", 'devmode')['result'];
-        return $result ? $result['devmode'] : false;
+        $result = $this->dbObject->viewSingleData("app_settings", 'devmode')['result']['devmode'];
+        return $result;
     }
 
     private function setDevModeStatus($status){

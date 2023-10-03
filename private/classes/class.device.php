@@ -207,7 +207,6 @@ class Device
             if (is_array($userLogs) && !empty($userLogs2)) {
                 if ($userLogs["count"] > 0 || $userLogs2["count"] > 0) {
                     throwWarning('User has previous login logs');
-                    echo "omgf";
                     $this->logger->log(
                         $uid,
                         'previous_login_logs',
