@@ -335,10 +335,20 @@ $router->add('/logout/:deviceToken/:param2/:optionalParam', 'UserController@theO
 if($GLOBALS['config']['devmode'] == 1){
     $router->add('/list-routes', 'DevController@listRoutes', 'GET');
     $router->add('/admin/dashboard', 'DevController@loadAdminDashboard', 'GET');
-    $router->add('/admin/dashboard', 'DevController@loadAdminDashboard', 'POST');
+    $router->add('/admin/service', 'DevController@loadAdminService', 'GET');
+    $router->add('/admin/search', 'DevController@loadAdminSearch', 'GET');
     $router->add('/admin/login', 'DevController@loadAdminLogin', 'GET');
+
+    $router->add('/admin/roles', 'DevController@loadAdminUsers', 'GET');
+    $router->add('/admin/integrations', 'DevController@loadAdminIntegrations', 'GET');
+    $router->add('/admin/devices', 'DevController@loadAdminDevices', 'GET');
+    $router->add('/admin/users', 'DevController@loadAdminUsers', 'GET');
+
+    $router->add('/admin/services', 'DevController@loadAdminServices', 'GET');
+    $router->add('/admin/tests', 'DevController@loadAdminTests', 'GET');
+    $router->add('/admin/logs', 'DevController@loadAdminLogs', 'GET');
+
     $router->add('/admin/login', 'DevController@loadAdminLogin', 'POST');    
-    // TODO: LIST CONSTANTS ENDPOINT
 }
 
 //dispatch router since authentication and global variables are set!

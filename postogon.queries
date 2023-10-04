@@ -194,3 +194,37 @@ SET @adminRoleId = LAST_INSERT_ID();
 INSERT INTO user_roles (user_id, role_id, createdAt, updatedAt)
 VALUES (12, @adminRoleId, NOW(), NOW())
 ON DUPLICATE KEY UPDATE role_id=role_id;
+
+CREATE TABLE search_queries (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    query TEXT NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    INDEX idx_user_id (user_id)
+);
+
+CREATE TABLE search_results (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    result_type VARCHAR(50) NOT NULL, -- Example: 'post', 'comment', 'reply', 'user', 'integration'
+    result_id INT NOT NULL, -- The ID of the corresponding item in the respective table
+    description TEXT,
+    INDEX idx_result_type (result_type),
+    INDEX idx_result_id (result_id)
+);
+
+CREATE TABLE search_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    query_id INT NOT NULL,
+    result_id INT NOT NULL,
+    action VARCHAR(20) NOT NULL, -- Example: 'click'
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (query_id) REFERENCES search_queries(id),
+    FOREIGN KEY (result_id) REFERENCES search_results(id),
+    INDEX idx_user_id (user_id),
+    INDEX idx_query_id (query_id),
+    INDEX idx_result_id (result_id),
+    INDEX idx_timestamp (timestamp)
+);

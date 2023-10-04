@@ -28,10 +28,6 @@ if (isset($_POST['confirm'])) {
     }
 }
 
-$avatar = $this->dbConnection->viewSingleData("users", "avatar", "WHERE id = ?", array(array("value" => $uidIsLoggedInAuthorized, "type" => PDO::PARAM_INT)))['result']['avatar'] ?? $GLOBALS['config']['default_avatar'];
-$avatarUrl = $GLOBALS['config']['avatar_url']."/".$avatar;
-$username = $this->dbConnection->viewSingleData("users", "username", "WHERE id = ?", array(array("value" => $uidIsLoggedInAuthorized, "type" => PDO::PARAM_INT)))['result']['username'] ?? "No username found";
-$email = $this->dbConnection->viewSingleData("users", "email", "WHERE id = ?", array(array("value" => $uidIsLoggedInAuthorized, "type" => PDO::PARAM_INT)))['result']['email'] ?? "No email found";
 
 
 
@@ -53,19 +49,7 @@ $metrics = [
     'totalLikes' => $dashboardMetrics->getTotalLikes(),
     'mostLikedPosts' => $dashboardMetrics->getMostLikedPosts(),
 ];
-// Consolidated functions for service metrics
-$serviceMetrics = [
-    'Total Services' => $dashboardMetrics->getTotalServices(),
-    'All Services' => count($dashboardMetrics->getAllServices()["results"]),
-    // Convert the array to count
-    'Active Services' => count($dashboardMetrics->getActiveServices()["results"]),
-    'Inactive Services' => count($dashboardMetrics->getInactiveServices()["results"]),
-    'Service Popularity' => $dashboardMetrics->getServicePopularity(),
-    'Most Popular Services' => (count($dashboardMetrics->getMostPopularServices(5)) > 0) ? $dashboardMetrics->getMostPopularServices(5) : 'No popular services found',
-    'Active Services Count' => $dashboardMetrics->getActiveServicesCount(),
-    'Total Integrations Count' => $dashboardMetrics->getTotalIntegrationsCount(),
-    'Metrics for All Services' => $dashboardMetrics->calculateMetricsForAllServices()
-];
+
 
 function getCategoryNameById($categoryId)
 {

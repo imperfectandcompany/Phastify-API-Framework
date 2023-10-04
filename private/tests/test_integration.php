@@ -130,9 +130,6 @@ function testUserCanCleanUpScenerio($integrationController)
     customAssert($result === true, "Failed: Could not delete service.");
 }
 
-
-
-
 function testUserCanUpdateIntegrationAfterAddingService($integrationController)
 {
     // Add a service

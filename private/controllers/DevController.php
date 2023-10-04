@@ -82,16 +82,146 @@ class DevController
         }
     }
 
-    public function loadAdminDashboard()
+    public function loadAdminSearch()
     {
+        include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
+
         $uidIsLoggedInAuthorized = $this->isLoggedIn();
         if(!$uidIsLoggedInAuthorized){
             header("Location: https://admin.postogon.com/admin/login");
         }
         $prodLogger = new Logger($this->prodDbConnection);
+        $prodDbConnection = $this->prodDbConnection;
+        $page = "Search";
+        include($GLOBALS['config']['private_folder'] . '/frontend/admin.php');
+    }
 
-        include($GLOBALS['config']['private_folder'] . '/backend/admin_dashboard.php');
-        include($GLOBALS['config']['private_folder'] . '/frontend/admin_dashboard.php');
+    public function loadAdminLogs()
+    {
+        include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
+
+        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        if(!$uidIsLoggedInAuthorized){
+            header("Location: https://admin.postogon.com/admin/login");
+        }
+        $prodLogger = new Logger($this->prodDbConnection);
+        $prodDbConnection = $this->prodDbConnection;
+        $page = "Logs";
+        include($GLOBALS['config']['private_folder'] . '/frontend/admin.php');
+    }
+
+    public function loadAdminTests()
+    {
+        include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
+
+        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        if(!$uidIsLoggedInAuthorized){
+            header("Location: https://admin.postogon.com/admin/login");
+        }
+        $prodLogger = new Logger($this->prodDbConnection);
+        $prodDbConnection = $this->prodDbConnection;
+        $page = "Tests";
+        include($GLOBALS['config']['private_folder'] . '/frontend/admin.php');
+    }
+
+    public function loadAdminRoles()
+    {
+        include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
+
+        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        if(!$uidIsLoggedInAuthorized){
+            header("Location: https://admin.postogon.com/admin/login");
+        }
+        $prodLogger = new Logger($this->prodDbConnection);
+        $prodDbConnection = $this->prodDbConnection;
+        $page = "Roles";
+        include($GLOBALS['config']['private_folder'] . '/frontend/admin.php');
+    }
+
+    public function loadAdminDevices()
+    {
+        include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
+
+        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        if(!$uidIsLoggedInAuthorized){
+            header("Location: https://admin.postogon.com/admin/login");
+        }
+        $prodLogger = new Logger($this->prodDbConnection);
+        $prodDbConnection = $this->prodDbConnection;
+        $page = "Devices";
+        include($GLOBALS['config']['private_folder'] . '/frontend/admin.php');
+    }
+
+    public function loadAdminServices()
+    {
+        include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
+
+        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        if(!$uidIsLoggedInAuthorized){
+            header("Location: https://admin.postogon.com/admin/login");
+        }
+        $prodLogger = new Logger($this->prodDbConnection);
+        $prodDbConnection = $this->prodDbConnection;
+        $page = "Services";
+        include($GLOBALS['config']['private_folder'] . '/frontend/admin.php');
+    }
+
+    public function loadAdminUsers()
+    {
+        include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
+
+        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        if(!$uidIsLoggedInAuthorized){
+            header("Location: https://admin.postogon.com/admin/login");
+        }
+        $prodLogger = new Logger($this->prodDbConnection);
+        $prodDbConnection = $this->prodDbConnection;
+        $page = "Users";
+        include($GLOBALS['config']['private_folder'] . '/frontend/admin.php');
+    }
+
+    public function loadAdminIntegrations()
+    {
+        include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
+
+        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        if(!$uidIsLoggedInAuthorized){
+            header("Location: https://admin.postogon.com/admin/login");
+        }
+        $prodLogger = new Logger($this->prodDbConnection);
+        $prodDbConnection = $this->prodDbConnection;
+        $page = "Integrations";
+        include($GLOBALS['config']['private_folder'] . '/frontend/admin.php');
+    }
+
+
+
+    public function loadAdminDashboard()
+    {
+        include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
+
+        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        if(!$uidIsLoggedInAuthorized){
+            header("Location: https://admin.postogon.com/admin/login");
+        }
+        $prodLogger = new Logger($this->prodDbConnection);
+        $prodDbConnection = $this->prodDbConnection;
+        $page = "Dashboard";
+        include($GLOBALS['config']['private_folder'] . '/frontend/admin.php');
+    }
+
+    public function loadAdminService()
+    {
+        include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
+        
+        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        if(!$uidIsLoggedInAuthorized){
+            header("Location: https://admin.postogon.com/admin/login");
+        }
+        $prodLogger = new Logger($this->prodDbConnection);
+        $prodDbConnection = $this->prodDbConnection;
+        $page = "Service";
+        include($GLOBALS['config']['private_folder'] . '/frontend/admin.php');
     }
 
     public function loadAdminLogin()
@@ -242,8 +372,6 @@ class DevController
                 $error = $e->getMessage();
             }
         }
-
-        include($GLOBALS['config']['private_folder'] . '/backend/admin_login.php');
         include($GLOBALS['config']['private_folder'] . '/frontend/admin_login.php');
     }
 
