@@ -1,8 +1,10 @@
 <?php
 include_once($GLOBALS['config']['private_folder'] . '/backend/admin.php');
 ?>
-<html class="light">
+<html>
 <head>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.8.1/flowbite.min.css" rel="stylesheet" />
+
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Admin <?php echo $page ?> - Postogon</title>
@@ -38,7 +40,9 @@ include_once($GLOBALS['config']['private_folder'] . '/backend/admin.php');
 </div>
     
   <script async defer src="https://buttons.github.io/buttons.js"></script>
-<script src="https://flowbite-admin-dashboard.vercel.app//app.bundle.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.8.1/flowbite.min.js"></script>
+  <script src="https://flowbite-admin-dashboard.vercel.app//app.bundle.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.2/datepicker.min.js"></script>
   </body>

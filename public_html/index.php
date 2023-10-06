@@ -139,6 +139,12 @@ include_once($GLOBALS['config']['private_folder'].'/data/user.php');
 
 // if the user is authenticated, create a new instance of the Router class and dispatch the incoming request
 $router = new Router();
+$adminRouter = new Router();
+
+
+
+
+
 
 // Fetch the public timeline (POST request)
 $router->add('/timeline/publicTimeline', 'TimelineController@fetchPublicTimeline', 'POST');
@@ -348,14 +354,18 @@ if($GLOBALS['config']['devmode'] == 1){
     $router->add('/admin/tests', 'DevController@loadAdminTests', 'GET');
     $router->add('/admin/logs', 'DevController@loadAdminLogs', 'GET');
 
-    $router->add('/admin/login', 'DevController@loadAdminLogin', 'POST');    
+    $router->add('/admin/login', 'DevController@loadAdminLogin', 'POST');
+    $router->add('/admin/users/count', 'AdminController@countUsers', 'GET');
+    $router->add('/admin/users/count/:searchQuery', 'AdminController@countUsers', 'GET');
+    $router->add('/admin/users/:page/:perPage', 'AdminController@fetchUsersList', 'GET');
+    $router->add('/admin/users/:query/:page/:perPage', 'AdminController@searchUsers', 'GET');
 }
+
 
 //dispatch router since authentication and global variables are set!
 $router->dispatch($GLOBALS['url_loc'], $dbConnection, $GLOBALS['config']['devmode']);
 // Check if we're in devmode
 if($GLOBALS['config']['devmode'] == 1){
-    $GLOBALS['config']['testmode'] = 1; //This enables testing
     include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');  
 }
 

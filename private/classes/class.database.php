@@ -181,7 +181,7 @@ class DatabaseConnector
 
 
     /**
-     * Retrieves rows from a specified table.
+     * Retrieves rows from a specified table with placeholder value support.
      *
      * @param string $table The name of the table to retrieve data from
      * @param string $select The columns to select (default is '*')
@@ -200,11 +200,10 @@ class DatabaseConnector
                     $stmt->bindParam($key, $data['value'], $data['type']);
                 }
             }
+            
             $stmt->execute();
             return array("count" => $stmt->rowCount(), "results" => $stmt->fetchAll());
         } catch (Exception $e) {
-            echo $e->getMessage();
-
             $GLOBALS['messages']['errors'][] = '<b>Error: </b>' . $e->getMessage();
             return false;
         } catch (\PDOException $e) {
@@ -212,6 +211,38 @@ class DatabaseConnector
             return false;
         }
     }
+
+    /**
+     * Retrieves rows from a specified table with named parameters.
+     *
+     * @param string $table The name of the table to retrieve data from
+     * @param string $select The columns to select (default is '*')
+     * @param string|null $query An optional WHERE clause to use in the query
+     * @param array|null $filter_params An optional array of filter parameters to use in the query
+     *
+     * @return array|false An array of database rows that match the query parameters or false on error
+     */
+    public function viewDataNP($table, $select = '*', $query = null, $filter_params = null)
+    {
+        try {
+            $stmt = $this->dbConnection->prepare("SELECT $select FROM $table $query");
+            if ($filter_params) {
+                foreach ($filter_params as $key => $data) {
+                    $stmt->bindParam($key, $data['value'], $data['type']);
+                }
+            }
+            
+            $stmt->execute();
+            return array("count" => $stmt->rowCount(), "results" => $stmt->fetchAll());
+        } catch (Exception $e) {
+            $GLOBALS['messages']['errors'][] = '<b>Error: </b>' . $e->getMessage();
+            return false;
+        } catch (\PDOException $e) {
+            $GLOBALS['messages']['errors'][] = '<b>INTERNAL ERROR: </b>' . $e->getMessage();
+            return false;
+        }
+    }
+
 
     /**
      * Retrieves a single row from a specified table.

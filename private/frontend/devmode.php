@@ -1,8 +1,7 @@
 <hr />
 <h1>DEV MODE IS ON -- Do not use in production!</h1>
-
-<?php if (count($GLOBALS['messages']) > 0): ?>
-    <?php if (!isset($GLOBALS['config']['testmode']) && $GLOBALS['config']['testmode'] != true): ?>
+<?php if (count($GLOBALS['messages']) > 0): ?>l
+    <?php if ($GLOBALS['config']['testmode'] != true): ?>
         <h4>Status</h4>
         <?php display_feedback($GLOBALS['messages']); ?>
     <?php endif; ?>
