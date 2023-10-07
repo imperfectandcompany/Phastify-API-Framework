@@ -76,7 +76,7 @@
                   role="menuitem">Dashboard</a>
               </li>
               <li>
-                <form method="post" role="menuitem">
+                <form method="get" role="menuitem">
                   <input type="hidden" name="confirm" value="true">
                   <button type="submit"
                     class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

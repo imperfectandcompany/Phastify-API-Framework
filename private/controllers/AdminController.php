@@ -52,7 +52,7 @@ class AdminController
     return sendResponse('success', ['data' => $userSearchResults], SUCCESS_OK);
     }    
 
-    private function isLoggedIn()
+    private function isAdminLoggedIn()
     {
         $roles = new Roles($this->prodDbConnection);
         $prodLogger = new Logger($this->prodDbConnection);
@@ -111,7 +111,7 @@ class AdminController
     {
         include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
 
-        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        $uidIsLoggedInAuthorized = $this->isAdminLoggedIn();
         if(!$uidIsLoggedInAuthorized){
             header("Location: https://admin.postogon.com/admin/login");
         }
@@ -125,7 +125,7 @@ class AdminController
     {
         include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
 
-        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        $uidIsLoggedInAuthorized = $this->isAdminLoggedIn();
         if(!$uidIsLoggedInAuthorized){
             header("Location: https://admin.postogon.com/admin/login");
         }
@@ -139,7 +139,7 @@ class AdminController
     {
         include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
 
-        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        $uidIsLoggedInAuthorized = $this->isAdminLoggedIn();
         if(!$uidIsLoggedInAuthorized){
             header("Location: https://admin.postogon.com/admin/login");
         }
@@ -153,7 +153,7 @@ class AdminController
     {
         include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
 
-        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        $uidIsLoggedInAuthorized = $this->isAdminLoggedIn();
         if(!$uidIsLoggedInAuthorized){
             header("Location: https://admin.postogon.com/admin/login");
         }
@@ -167,7 +167,7 @@ class AdminController
     {
         include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
 
-        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        $uidIsLoggedInAuthorized = $this->isAdminLoggedIn();
         if(!$uidIsLoggedInAuthorized){
             header("Location: https://admin.postogon.com/admin/login");
         }
@@ -181,7 +181,7 @@ class AdminController
     {
         include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
 
-        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        $uidIsLoggedInAuthorized = $this->isAdminLoggedIn();
         if(!$uidIsLoggedInAuthorized){
             header("Location: https://admin.postogon.com/admin/login");
         }
@@ -195,7 +195,7 @@ class AdminController
     {
         include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
 
-        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        $uidIsLoggedInAuthorized = $this->isAdminLoggedIn();
         if(!$uidIsLoggedInAuthorized){
             header("Location: https://admin.postogon.com/admin/login");
         }
@@ -209,7 +209,7 @@ class AdminController
     {
         include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
 
-        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        $uidIsLoggedInAuthorized = $this->isAdminLoggedIn();
         if(!$uidIsLoggedInAuthorized){
             header("Location: https://admin.postogon.com/admin/login");
         }
@@ -225,7 +225,7 @@ class AdminController
     {
         include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
 
-        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        $uidIsLoggedInAuthorized = $this->isAdminLoggedIn();
         if(!$uidIsLoggedInAuthorized){
             header("Location: https://admin.postogon.com/admin/login");
         }
@@ -239,7 +239,7 @@ class AdminController
     {
         include_once($GLOBALS['config']['private_folder'] . '/classes/class.dashboardMetrics.php');
         
-        $uidIsLoggedInAuthorized = $this->isLoggedIn();
+        $uidIsLoggedInAuthorized = $this->isAdminLoggedIn();
         if(!$uidIsLoggedInAuthorized){
             header("Location: https://admin.postogon.com/admin/login");
         }
@@ -251,7 +251,7 @@ class AdminController
 
     public function loadAdminLogin()
     {
-        if($this->isLoggedIn()){
+        if($this->isAdminLoggedIn()){
             header("Location: https://admin.postogon.com/admin/dashboard");
         }        
 

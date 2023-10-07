@@ -18,6 +18,7 @@ $GLOBALS['db_conf']['db_host'] = $domain;
 $GLOBALS['db_conf']['db_user'] = $user;
 $GLOBALS['db_conf']['db_pass'] = $pass;
 $GLOBALS['db_conf']['db_db'] = $table;
+$GLOBALS['db_conf']['db_db_dev'] = $tabledev;
 $GLOBALS['db_conf']['db_db_prod'] = $tableprod;
 $GLOBALS['db_conf']['db_db_test'] = $tabletest;
 $GLOBALS['db_conf']['port'] = '3306';

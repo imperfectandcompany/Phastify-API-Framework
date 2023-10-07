@@ -37,7 +37,28 @@ $localizationManager = new LocalizationManager(
     $cache
 );
 
-$localizationManager->initialize();
+// TODO: MOVE TO LOCALIZATION FEATURE
+$environment = "dev";
+
+if($environment == "dev"){
+    $table = $GLOBALS['db_conf']['db_db_dev'];
+} else {
+    $table = $GLOBALS['db_conf']['db_db_prod'];
+}
+
+// Dev mode is a tool for diagnosing issues with the API
+// It is not intended to be used in production
+// Dev mode is different from development environment in that it is a toggleable feature
+// Dev mode does not switch the environment, it simply enables or disables certain features
+
+// Test mode is a tool for testing the API
+// Test mode is not intended to be used in production
+// Test mode is different from development environment in that it is a toggleable feature
+// Test mode does not switch the environment, it simply enables or disables certain features
+// Dev mode must be enabled to use test mode
+// Test mode accesses a different database than the production and development database
+
+// Test mode is used to test the API in a production-like environment
 
 //include($GLOBALS['config']['private_folder'].'/structures/create_constants_structure.php');
 // set up database connection
@@ -50,11 +71,12 @@ $dbConnection = new DatabaseConnector(
     $GLOBALS['db_conf']['db_charset']
 );
 
-require_once $GLOBALS['config']['private_folder'].'/classes/class.router.php';
-
 // get an instance of the Devmode class
 $devMode = new Dev($dbConnection);
-$GLOBALS['config']['devmode'] = $devMode->getDevModeStatus();
+
+$localizationManager->initialize($devMode->getDevModeStatus());
+
+require_once $GLOBALS['config']['private_folder'].'/classes/class.router.php';
 
 require("./auth.php");
 // check if token is provided in the request header or query parameter or default to dev_mode_token if dev mode is enabled
@@ -65,9 +87,6 @@ if (empty($token)) {
 
 // authenticate the user
 $result = authenticate_user($token, $dbConnection);
-
-
-
 
     // // Create a cache instance
     // $cache = new LocalizationCache();
@@ -85,26 +104,63 @@ $result = authenticate_user($token, $dbConnection);
     // echo $message;
     // yo sterling was here lmaooo
     // echo "afwefw;";
-    
 
+ 
+    // Keep in mind when dev mode is enabled, that injects a token into the request
+    // Meaning it spoofs your login for you, so you don't have to login to test the API
+    // Admin logged
+    // Create a new instance for admin routes from router class
+    // Admin logged is entirely separate login process from user login
+    require_once('internal_admin_auth.php');
+    $isAdminLoggedIn = checkAdmin();
 
-// handle case where user is not authenticated
-if ($result['status'] === 'error') {
-    
     // create a new instance for unauthenticated routes from router class
     $notAuthenticatedRouter = new Router();
 
+    // if the user is authenticated, create a new instance of the Router class and dispatch the incoming request
+    $router = new Router();
+    // Determine if the user is logged in
+    $isLoggedIn = !$result['status'] === 'error';
+    // Determine which router to add routes to
+    $adminRoutes = $isLoggedIn ? $router : $notAuthenticatedRouter;
+
+    // Access main routes for admin, dashboard redirects to login if not logged in
+    $adminRoutes->add('/admin/login', 'AdminController@loadAdminLogin', 'GET');
+    $adminRoutes->add('/admin/login', 'AdminController@loadAdminLogin', 'POST');
+    $adminRoutes->add('/admin/dashboard', 'DevController@loadAdminDashboard', 'GET');
+        
+    // These routes will not exist unless there is an admin logged in
+    if($isAdminLoggedIn){
+        $adminRoutes->add('/list-routes', 'DevController@listRoutes', 'GET');
+        $adminRoutes->add('/admin/service', 'DevController@loadAdminService', 'GET');
+        $adminRoutes->add('/admin/search', 'DevController@loadAdminSearch', 'GET');
+    
+        $adminRoutes->add('/admin/roles', 'DevController@loadAdminUsers', 'GET');
+        $adminRoutes->add('/admin/integrations', 'DevController@loadAdminIntegrations', 'GET');
+        $adminRoutes->add('/admin/devices', 'DevController@loadAdminDevices', 'GET');
+        $adminRoutes->add('/admin/users', 'DevController@loadAdminUsers', 'GET');
+    
+        $adminRoutes->add('/admin/services', 'DevController@loadAdminServices', 'GET');
+        $adminRoutes->add('/admin/tests', 'DevController@loadAdminTests', 'GET');
+        $adminRoutes->add('/admin/logs', 'DevController@loadAdminLogs', 'GET');
+    
+        $adminRoutes->add('/admin/users/count', 'AdminController@countUsers', 'GET');
+        $adminRoutes->add('/admin/users/count/:searchQuery', 'AdminController@countUsers', 'GET');
+        $adminRoutes->add('/admin/users/:page/:perPage', 'AdminController@fetchUsersList', 'GET');
+        $adminRoutes->add('/admin/users/:query/:page/:perPage', 'AdminController@searchUsers', 'GET');
+    }
+    
+// handle case where user is not authenticated
+if ($result['status'] === 'error') {
+
     if($GLOBALS['config']['devmode'] == 1){
         $notAuthenticatedRouter->add('/list-routes', 'DevController@listRoutes', 'GET');
-        $notAuthenticatedRouter->add('/admin/dashboard', 'DevController@loadAdminDashboard', 'GET');
-        $notAuthenticatedRouter->add('/admin/login', 'DevController@loadAdminLogin', 'GET');
         // TODO: LIST CONSTANTS ENDPOINT
     }
 
     if($GLOBALS['config']['devmode'] == 1){
         include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');  
     }
-
 
     // add the non-authenticated routes to the router
     $notAuthenticatedRouter->add('/register', 'UserController@register', 'POST');
@@ -139,12 +195,6 @@ include_once($GLOBALS['config']['private_folder'].'/data/user.php');
 
 // if the user is authenticated, create a new instance of the Router class and dispatch the incoming request
 $router = new Router();
-$adminRouter = new Router();
-
-
-
-
-
 
 // Fetch the public timeline (POST request)
 $router->add('/timeline/publicTimeline', 'TimelineController@fetchPublicTimeline', 'POST');
@@ -336,31 +386,6 @@ $router->add('/logout/:deviceToken', 'UserController@logoutAllParam', 'GET');
 
 //implement next..
 $router->add('/logout/:deviceToken/:param2/:optionalParam', 'UserController@theOnewokring', 'GET');
-
-
-if($GLOBALS['config']['devmode'] == 1){
-    $router->add('/list-routes', 'DevController@listRoutes', 'GET');
-    $router->add('/admin/dashboard', 'DevController@loadAdminDashboard', 'GET');
-    $router->add('/admin/service', 'DevController@loadAdminService', 'GET');
-    $router->add('/admin/search', 'DevController@loadAdminSearch', 'GET');
-    $router->add('/admin/login', 'DevController@loadAdminLogin', 'GET');
-
-    $router->add('/admin/roles', 'DevController@loadAdminUsers', 'GET');
-    $router->add('/admin/integrations', 'DevController@loadAdminIntegrations', 'GET');
-    $router->add('/admin/devices', 'DevController@loadAdminDevices', 'GET');
-    $router->add('/admin/users', 'DevController@loadAdminUsers', 'GET');
-
-    $router->add('/admin/services', 'DevController@loadAdminServices', 'GET');
-    $router->add('/admin/tests', 'DevController@loadAdminTests', 'GET');
-    $router->add('/admin/logs', 'DevController@loadAdminLogs', 'GET');
-
-    $router->add('/admin/login', 'DevController@loadAdminLogin', 'POST');
-    $router->add('/admin/users/count', 'AdminController@countUsers', 'GET');
-    $router->add('/admin/users/count/:searchQuery', 'AdminController@countUsers', 'GET');
-    $router->add('/admin/users/:page/:perPage', 'AdminController@fetchUsersList', 'GET');
-    $router->add('/admin/users/:query/:page/:perPage', 'AdminController@searchUsers', 'GET');
-}
-
 
 //dispatch router since authentication and global variables are set!
 $router->dispatch($GLOBALS['url_loc'], $dbConnection, $GLOBALS['config']['devmode']);
