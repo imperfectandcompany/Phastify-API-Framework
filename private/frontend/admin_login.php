@@ -28,7 +28,7 @@
     class="bg-white max-w-md mx-auto p-8 md:border-t-8 md:border-purple-700 md:p-12 md:my-10 rounded lg:shadow-2xl md:shadow-lg sm:shadow-sm">
     <section>
         <div class="pb-8">
-            <h3 class="font-bold text-2xl text-center"x`>Log into Postogon Admin</h3>
+            <h3 class="font-bold text-2xl text-center">Log into Postogon Admin</h3>
             <?php if (isset($isAuthorized) && $isAuthorized === true): ?>
                 <div class="pt-8">
                     <div class="bg-green-200 border-l-4 border-green-300 text-green-800 p-4">

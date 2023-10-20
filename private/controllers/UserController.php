@@ -1,7 +1,7 @@
 <?php
 // Includes
-include($GLOBALS['config']['private_folder'].'/classes/class.timeline.php');
-include($GLOBALS['config']['private_folder'].'/classes/class.device.php');
+include_once($GLOBALS['config']['private_folder'].'/classes/class.timeline.php');
+include_once($GLOBALS['config']['private_folder'].'/classes/class.device.php');
 
 /**
  * UserController handles user authentication.
@@ -203,6 +203,20 @@ class UserController {
         }
 
         return $result;
+    }
+    
+    public function isUsernameAvailable(string $username){
+        $user = new User($this->dbConnection);
+        if($user->checkUsername($username)){
+            throwError('Username is unavailable');
+            sendResponse('error', ['message' => "Username is already taken"], ERROR_UNAUTHORIZED);
+            http_response_code(ERROR_UNAUTHORIZED);
+            die();
+        } else {
+            throwSuccess('Username is available');
+            sendResponse('success', ['message' => "Username is available"], SUCCESS_OK);
+            return false;
+        }
     }
     
     public function logout() {

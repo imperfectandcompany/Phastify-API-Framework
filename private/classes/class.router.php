@@ -200,33 +200,17 @@ class Router {
                     }
                 }
 
-                    // Check if request method is allowed for this route
-                    if (!isset($config['methods'][$_SERVER['REQUEST_METHOD']])) {
-                        $this->handleError("Route with URI '$url' and request method '{$_SERVER['REQUEST_METHOD']}' not found.");
-                        return;
-                    }
+                // Check if request method is allowed for this route
+                if (!isset($config['methods'][$_SERVER['REQUEST_METHOD']])) {
+                    $this->handleError("Route with URI '$url' and request method '{$_SERVER['REQUEST_METHOD']}' not found.");
+                    return;
+                }
 
-                    // Extract controller and method from route
-                    list($controller, $method) = explode('@', $config['methods'][$_SERVER['REQUEST_METHOD']]['controller']);
-                    
-                    // Include the controller class
-                    require_once $GLOBALS['config']['private_folder'] . "/controllers/{$controller}.php";
-
-                    $reflection = new ReflectionMethod($controller, $method);
-                    $methodParams = $reflection->getParameters();
-                    
-                    // Create an array of parameter names
-                    $paramNames = array_map(function($param) {
-                        return $param->getName();
-                    }, $methodParams);
-                    
-                    $routeParamNames = array_values(array_map(function($param) {
-                        // Remove the ':' prefix
-                        return ltrim($param, ':');
-                    }, $config['params']));
-
-                 
-
+                // Extract controller and method from route
+                list($controller, $method) = explode('@', $config['methods'][$_SERVER['REQUEST_METHOD']]['controller']);
+                
+                // Include the controller class
+                require_once $GLOBALS['config']['private_folder'] . "/controllers/{$controller}.php";
 
                 // Check if controller and method exist
                 if (!class_exists($controller) || !method_exists($controller, $method)) {
@@ -242,7 +226,7 @@ class Router {
                 // Validate the parameters
                 $validatedParams = $this->validateParams($controller, $method, $params);
                 if ($validatedParams === false) {
-                    //TODO: add specific error handling, missing parameter or wrong data type etc.
+                    //9-10-23 add specific error handling, missing parameter or wrong data type etc.
                     $this->handleError("Invalid parameters for route with URI '$url'.");
                     return;
                 }
@@ -266,13 +250,6 @@ class Router {
                             case 'body':
                                 // Extract parameters from the request body (e.g., JSON)
                                 $postBody = json_decode(file_get_contents("php://input"));
-                                if ($postBody === null) {
-                                    // Handle JSON decoding error
-                                    $this->handleError("Error decoding JSON data in request body");
-                                    return;
-                                }
-                                
-                                // Now check for the property
                                 if (property_exists($postBody, $paramName)) {
                                     $routeBodyParams[$paramName] = $postBody->$paramName;
                                 } else {
@@ -291,7 +268,6 @@ class Router {
                 
                 $controllerInstance->{$method}(...$validatedParams);
                 $routeMatched = true; // Set the flag to true as a route was dispatched
-                
                 return;
             }
         }

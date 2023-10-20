@@ -81,3 +81,4 @@ $GLOBALS['messages']['success'] = array(); //Main array for all status messages
 $GLOBALS['messages']['test'] = array(); //Main array for all status messages
 
 ?>
+
