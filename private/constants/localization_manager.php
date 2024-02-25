@@ -46,7 +46,7 @@ class LocalizationManager
     {
         $this->baseDirectory = $GLOBALS['config']['private_folder'] . "/constants";
         $this->loadConstants('system_constants.php');
-        $this->environment = false;
+        $this->environment = devmode ? 'dev' : 'prod';
         $this->defaultLocale = region;
         $this->cache = $cache;
         $this->loadConstants('db_constants.php');
@@ -147,22 +147,16 @@ class LocalizationManager
      *
      * @throws Exception If dynamic mode is not enabled.
      */
-    public function initialize(bool $devMode = false)
+    public function initialize()
     {
         $this->dynamicMode = true;
-        $this->environment = $devMode ? 'dev' : 'prod';
+
         // Load and override constants dynamically as needed
         $this->defineDynamicConstants();
     }
 
     /**
      * Defines dynamic constants based on the current environment and locale.
-     *
-     * This function loads constants from environment-specific files and merges them
-     * with constants from a common file. Environment-specific constants take precedence
-     * over the common ones.
-     *
-     * @throws Exception If dynamic mode is not enabled, constants cannot be defined.
      */
     public function defineDynamicConstants()
     {

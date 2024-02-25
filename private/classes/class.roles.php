@@ -391,7 +391,7 @@ class Roles
             ";
     
         $query = 'SELECT COUNT(*) AS count FROM user_roles AS ur JOIN roles AS r ON ur.role_id = r.id WHERE ur.user_id = ? AND r.name = ?';
-        $paramsArray = array($userId, $roleName);
+        $paramsArray = array($GLOBALS["user_id"], $roleName);
         $result = $this->dbConnection->query($query, $paramsArray);
                 // Check if $result is null or not an array
             if ($result === null || !is_array($result)) {
@@ -399,6 +399,7 @@ class Roles
                 throwError("Database query failed or returned non-array result.");
                 return false;
             }
+            
             if (isset($result[0]) && isset($result[0]['count']) && $result[0]['count'] > 0) {
                 return true; // User has the role
             }

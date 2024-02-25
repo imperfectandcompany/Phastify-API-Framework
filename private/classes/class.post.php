@@ -264,7 +264,7 @@ class Post
      */
     public function getArchivedPosts(int $userid)
     {
-        $query = 'WHERE (to_whom = 3 OR to_whom = 4) AND user_id = ?';
+        $query = 'WHERE to_whom = 3 OR to_whom = 4 AND user_id = ?';
         $select = 'id, body, to_whom, user_id, expire_time, posted_on, last_edited, likes, original_content, flagged_content, to_whom_original';
         $paramValues = array($userid);
         $filter_params = makeFilterParams($paramValues);

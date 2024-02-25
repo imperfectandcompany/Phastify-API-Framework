@@ -57,24 +57,6 @@ class User {
         }
     }
     
-    /**
-     * Queries the database for username to see if it exists
-     *
-     * @param string $username The id of the username to query
-     *
-     * @return true|false Returns true or false if the username is not found
-     */
-    public function checkUsername($username)
-    {
-        $sql = "SELECT username FROM users WHERE username = ?";
-        $result = $this->dbObject->query($sql, array($username));
-        if ($result && count($result) > 0) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-    
     public function getPasswordFromEmail($email) {
         $table = 'users';
         $select = 'password';

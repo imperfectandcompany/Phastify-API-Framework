@@ -14,18 +14,15 @@ $GLOBALS['config']['url_offset'] = 0;
 //this ultimately!
 require('dbconfig.php');
 //Database variables
-$GLOBALS['db_conf']['db_host'] = $domain;
-$GLOBALS['db_conf']['db_user'] = $user;
-$GLOBALS['db_conf']['db_pass'] = $pass;
-$GLOBALS['db_conf']['db_db'] = $table;
-$GLOBALS['db_conf']['db_db_dev'] = $tabledev;
-$GLOBALS['db_conf']['db_db_prod'] = $tableprod;
-$GLOBALS['db_conf']['db_db_test'] = $tabletest;
-$GLOBALS['db_conf']['port'] = '3306';
-$GLOBALS['db_conf']['db_charset'] = 'utf8mb4';
+$GLOBALS['db_conf']['db_host']  =    $domain;
+$GLOBALS['db_conf']['db_user']  =    $user;
+$GLOBALS['db_conf']['db_pass']  =    $pass;
+$GLOBALS['db_conf']['db_db']    =    $table;
+$GLOBALS['db_conf']['port']     =    '3306';
+$GLOBALS['db_conf']['db_charset']  = 'utf8mb4';
 
-$GLOBALS['config']['devmode'] = 0; //This enables dev mode to print out dev information -- DO NOT USE IN PRODUCTION!
-$GLOBALS['config']['testmode'] = 0; //This enables testing
+$GLOBALS['config']['devmode'] = 1; //This enables dev mode to print out dev information -- DO NOT USE IN PRODUCTION!
+$GLOBALS['config']['testmode'] = 1; //This enables testing
 
 //General settings
 $GLOBALS['config']['max_username_length'] = '32';
@@ -56,12 +53,8 @@ $GLOBALS['config']['tags'] = array(
 //This is how we get what page we should be on based on URL.
 $GLOBALS['url_loc'] = explode('/', htmlspecialchars(strtok($_SERVER['REQUEST_URI'], '?'), ENT_QUOTES));
 
-if ($GLOBALS['config']['url_offset'] > 0) {
-    $x = 0;
-    while ($x < ($GLOBALS['config']['url_offset'])) {
-        unset($GLOBALS['url_loc'][$x]);
-        $x++;
-    }
+if($GLOBALS['config']['url_offset'] > 0){
+    $x = 0; while($x < ($GLOBALS['config']['url_offset'])){ unset($GLOBALS['url_loc'][$x]); $x++; }
     $GLOBALS['url_loc'] = array_values($GLOBALS['url_loc']);
 }
 

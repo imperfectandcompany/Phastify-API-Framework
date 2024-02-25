@@ -1,11 +1,6 @@
 <?php
 
-// TODO: MOVE TO LOCALIZATION FEATURE
-// Currently available environments: 'dev', 'prod'
-$environment = "prod";
-
-include '../private/configs/application_'.$environment.'.php';
-
+include '../private/config.php';
 
 // set timezone
 date_default_timezone_set($GLOBALS['config']['timezone']);
@@ -22,16 +17,16 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 
 // includes
-include($GLOBALS['config']['private_folder'] . '/functions/functions.general.php');
-include($GLOBALS['config']['private_folder'] . '/functions/functions.json.php');
-include($GLOBALS['config']['private_folder'] . '/functions/functions.database.php');
-include($GLOBALS['config']['private_folder'] . '/constants.php');
-include($GLOBALS['config']['private_folder'] . '/constants/localization_manager.php');
+include($GLOBALS['config']['private_folder'].'/functions/functions.general.php');
+include($GLOBALS['config']['private_folder'].'/functions/functions.json.php');
+include($GLOBALS['config']['private_folder'].'/functions/functions.database.php');
+include($GLOBALS['config']['private_folder'].'/constants.php');
+include($GLOBALS['config']['private_folder'].'/constants/localization_manager.php');
 
 // include the necessary files and create a database connection object
-require_once $GLOBALS['config']['private_folder'] . '/classes/class.database.php';
-require_once $GLOBALS['config']['private_folder'] . '/classes/class.user.php';
-require_once $GLOBALS['config']['private_folder'] . '/classes/class.dev.php';
+require_once $GLOBALS['config']['private_folder'].'/classes/class.database.php';
+require_once $GLOBALS['config']['private_folder'].'/classes/class.user.php';
+require_once $GLOBALS['config']['private_folder'].'/classes/class.dev.php';
 require_once($GLOBALS['config']['private_folder'] . '/classes/class.localizationCache.php');
 
 // Create a cache instance
@@ -42,20 +37,7 @@ $localizationManager = new LocalizationManager(
     $cache
 );
 
-
-// Dev mode is a tool for diagnosing issues with the API
-// It is not intended to be used in production
-// Dev mode is different from development environment in that it is a toggleable feature
-// Dev mode does not switch the environment, it simply enables or disables certain features
-
-// Test mode is a tool for testing the API
-// Test mode is not intended to be used in production
-// Test mode is different from development environment in that it is a toggleable feature
-// Test mode does not switch the environment, it simply enables or disables certain features
-// Dev mode must be enabled to use test mode
-// Test mode accesses a different database than the production and development database
-
-// Test mode is used to test the API in a production-like environment
+$localizationManager->initialize();
 
 //include($GLOBALS['config']['private_folder'].'/structures/create_constants_structure.php');
 // set up database connection
@@ -68,12 +50,7 @@ $dbConnection = new DatabaseConnector(
     $GLOBALS['db_conf']['db_charset']
 );
 
-// get an instance of the Devmode class
-$devMode = new Dev($dbConnection);
-
-$localizationManager->initialize($devMode->getDevModeStatus());
-
-require_once $GLOBALS['config']['private_folder'] . '/classes/class.router.php';
+require_once $GLOBALS['config']['private_folder'].'/classes/class.router.php';
 
 require("./auth.php");
 // check if token is provided in the request header or query parameter or default to dev_mode_token if dev mode is enabled
@@ -85,83 +62,41 @@ if (empty($token)) {
 // authenticate the user
 $result = authenticate_user($token, $dbConnection);
 
-// // Create a cache instance
-// $cache = new LocalizationCache();
-
-// // Initialize LocalizationManager with the cache
-// $localizationManager = new LocalizationManager(
-//     $GLOBALS['config']['private_folder'] . "/constants",
-//     $GLOBALS['config']['devmode'] ? 'dev' : 'prod',
-//     'en_US',
-//     $cache
-// );
-
-// $message = $localizationManager->getLocalizedString('ERROR_LOGIN_FAILED');
-
-// echo $message;
-// yo sterling was here lmaooo
-// echo "afwefw;";
+    // get an instance of the Devmode class
+    $devMode = new Dev($dbConnection);
+    $GLOBALS['config']['devmode'] = $devMode->getDevModeStatus();
 
 
-// Keep in mind when dev mode is enabled, that injects a token into the request
-// Meaning it spoofs your login for you, so you don't have to login to test the API
-// Admin logged
-// Create a new instance for admin routes from router class
-// Admin logged is entirely separate login process from user login
-require_once('internal_admin_auth.php');
-$isAdminLoggedIn = checkAdmin();
 
-// if the user is authenticated, create a new instance of the Router class and dispatch the incoming request
-$router = new Router();
+    // // Create a cache instance
+    // $cache = new LocalizationCache();
 
-// create a new instance for unauthenticated routes from router class
-$notAuthenticatedRouter = new Router();
+    // // Initialize LocalizationManager with the cache
+    // $localizationManager = new LocalizationManager(
+    //     $GLOBALS['config']['private_folder'] . "/constants",
+    //     $GLOBALS['config']['devmode'] ? 'dev' : 'prod',
+    //     'en_US',
+    //     $cache
+    // );
+    
+    // $message = $localizationManager->getLocalizedString('ERROR_LOGIN_FAILED');
+    
+    // echo $message;
+    // yo sterling was here lmaooo
+    // echo "afwefw;";
+    
 
-// Determine if the user is logged in
-$isLoggedIn = !$result['status'] === 'error';
-// Determine which router to add routes to
-$mutualRoute = $isLoggedIn ? $router : $notAuthenticatedRouter;
-
-// lets us know if a user exists or not
-$mutualRoute->add('/checkUsername/:username', 'UserController@isUsernameAvailable', 'GET');
-
-// Access main routes for admin, dashboard redirects to login if not logged in
-$mutualRoute->add('/admin/login', 'AdminController@loadAdminLogin', 'GET');
-$mutualRoute->add('/admin/login', 'AdminController@loadAdminLogin', 'POST');
-$mutualRoute->add('/admin/dashboard', 'DevController@loadAdminDashboard', 'GET');
-
-// These routes will not exist unless there is an admin logged in
-if ($isAdminLoggedIn) {
-    $mutualRoute->add('/list-routes', 'DevController@listRoutes', 'GET');
-    $mutualRoute->add('/admin/service', 'DevController@loadAdminService', 'GET');
-    $mutualRoute->add('/admin/search', 'DevController@loadAdminSearch', 'GET');
-
-    $mutualRoute->add('/admin/roles', 'DevController@loadAdminUsers', 'GET');
-    $mutualRoute->add('/admin/integrations', 'DevController@loadAdminIntegrations', 'GET');
-    $mutualRoute->add('/admin/devices', 'DevController@loadAdminDevices', 'GET');
-    $mutualRoute->add('/admin/users', 'DevController@loadAdminUsers', 'GET');
-
-    $mutualRoute->add('/admin/services', 'DevController@loadAdminServices', 'GET');
-    $mutualRoute->add('/admin/tests', 'DevController@loadAdminTests', 'GET');
-    $mutualRoute->add('/admin/logs', 'DevController@loadAdminLogs', 'GET');
-
-    $mutualRoute->add('/admin/users/count', 'AdminController@countUsers', 'GET');
-    $mutualRoute->add('/admin/users/count/:searchQuery', 'AdminController@countUsers', 'GET');
-    $mutualRoute->add('/admin/users/:page/:perPage', 'AdminController@fetchUsersList', 'GET');
-    $mutualRoute->add('/admin/users/:query/:page/:perPage', 'AdminController@searchUsers', 'GET');
-}
 
 // handle case where user is not authenticated
 if ($result['status'] === 'error') {
+    
+    // create a new instance for unauthenticated routes from router class
+    $notAuthenticatedRouter = new Router();
 
-    if ($GLOBALS['config']['devmode'] == 1) {
-        $notAuthenticatedRouter->add('/list-routes', 'DevController@listRoutes', 'GET');
-        // TODO: LIST CONSTANTS ENDPOINT
+    if($GLOBALS['config']['devmode'] == 1){
+        include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');  
     }
 
-    if ($GLOBALS['config']['devmode'] == 1) {
-        include($GLOBALS['config']['private_folder'] . '/frontend/devmode.php');
-    }
 
     // add the non-authenticated routes to the router
     $notAuthenticatedRouter->add('/register', 'UserController@register', 'POST');
@@ -172,14 +107,14 @@ if ($result['status'] === 'error') {
 
     // get all the routes that have been added to the router
     $routes = $notAuthenticatedRouter->getRoutes();
-
+    
     //check if the requested route does not match one of the non-authenticated routes
-    if (!$notAuthenticatedRouter->routeExists($GLOBALS['url_loc'], $routes)) {
+    if(!$notAuthenticatedRouter->routeExists($GLOBALS['url_loc'], $routes)){
         http_response_code(ERROR_UNAUTHORIZED);
         echo $result['message'];
         exit();
     }
-
+    
     // dispatch the request to the appropriate controller
     $notAuthenticatedRouter->dispatch($GLOBALS['url_loc'], $dbConnection, 1);
     exit();
@@ -192,10 +127,15 @@ $GLOBALS['token'] = $result['token'];
 $GLOBALS['logged_in'] = true;
 
 // at this point we have our user_id and can set global data
-include_once($GLOBALS['config']['private_folder'] . '/data/user.php');
+include_once($GLOBALS['config']['private_folder'].'/data/user.php');
 
 // if the user is authenticated, create a new instance of the Router class and dispatch the incoming request
 $router = new Router();
+
+// get an instance of the Devmode class
+$devMode = new Dev($dbConnection);
+$GLOBALS['config']['devmode'] = $devMode->getDevModeStatus();
+$GLOBALS['config']['testmode'] = 1; //This disables testing
 
 // Fetch the public timeline (POST request)
 $router->add('/timeline/publicTimeline', 'TimelineController@fetchPublicTimeline', 'POST');
@@ -261,18 +201,15 @@ $router->addDocumentation('/integrations/:id/refresh', 'POST', 'Refreshes the da
 $router->addDocumentation('/integrations/:id', 'PUT', 'Updates an existing integration for the authenticated user.');
 // Require a 'service' to be present in the request body
 $router->enforceParameters('/integrations/:id', 'PUT', [
-    'service' => 'body',
-    // Service comes from the request body
+    'service' => 'body',   // Service comes from the request body
 ]);
 
 // Create a New Post with Optional Expiration Time
 $router->add('/post', 'PostController@createPost', 'POST');
 $router->addDocumentation('/post', 'POST', 'Creates a new post with an optional expiration time.');
 $router->enforceParameters('/post', 'POST', [
-    'body' => 'body',
-    // Content of the post in the request body
-    'to_whom' => 'body',
-    // Public (1) or private (2) post in the request body
+    'body' => 'body',            // Content of the post in the request body
+    'to_whom' => 'body',         // Public (1) or private (2) post in the request body
     // 'expiration_time' => 'body' Optional expiration time in the request body
 ]);
 
@@ -289,11 +226,9 @@ $router->addDocumentation('/post/:id', 'DELETE', 'Deletes a post.');
 $router->add('/post/:id', 'PostController@updatePost', 'PUT');
 $router->addDocumentation('/post/:id', 'PUT', 'Updates an existing post with an optional expiration time.');
 $router->enforceParameters('/post/:id', 'PUT', [
-    'body' => 'body',
-    // Content of the post in the request body
-    // Easter egg number two yo will you find it??
-    'to_whom' => 'body',
-    // Public (1) or private (2) post in the request body
+    'body' => 'body',            // Content of the post in the request body
+                                // Easter egg number two yo will you find it??
+    'to_whom' => 'body',         // Public (1) or private (2) post in the request body
     // 'expiration_time' => 'body' Optional expiration time in the request body
 ]);
 
@@ -341,8 +276,7 @@ $router->addDocumentation('/post/:id/comments', 'GET', 'Retrieves comments for a
 $router->add('/post/:id/comment', 'CommentController@createPostComment', 'POST');
 $router->addDocumentation('/post/:id/comment', 'POST', 'Creates a new comment on a post.');
 $router->enforceParameters('/post/:id/comment', 'POST', [
-    'comment' => 'body',
-    // Content of the comment in the request body
+    'comment' => 'body',       // Content of the comment in the request body
 ]);
 
 // Delete a comment
@@ -368,6 +302,9 @@ $router->addDocumentation('/services/:id', 'GET', 'Get service details by ID (ad
 $router->add('/services/:id', 'ServiceController@deleteServiceById', 'DELETE');
 $router->addDocumentation('/services/:id', 'DELETE', 'Delete a service by ID (admin only).');
 
+
+
+
 //POST /logout
 //Description: Logs out the user from the current device and invalidates the token unless all_devices is passed as true, in which case, the user is logged out from all devices, and all tokens are invalidated.
 //Request Body: {
@@ -376,7 +313,7 @@ $router->addDocumentation('/services/:id', 'DELETE', 'Delete a service by ID (ad
 //}
 //token (string): The token passed for auth interceptor as header, also identifier for the user's current device, used to fetch the user_id.
 //all_devices (boolean): If true, logs out the user from all devices, passed as a boolean value in the request body.
-$router->add('/logout', 'UserController@logoutAll', 'GET');
+    $router->add('/logout', 'UserController@logoutAll', 'GET');
 
 //POST /logout/:id
 //Description: Logs out the user from a specific device and invalidates the token associated with that device.
@@ -394,17 +331,28 @@ $router->add('/logout/:deviceToken', 'UserController@logoutAllParam', 'GET');
 //implement next..
 $router->add('/logout/:deviceToken/:param2/:optionalParam', 'UserController@theOnewokring', 'GET');
 
+
+
+
+if($GLOBALS['config']['devmode'] == 1){
+    $router->add('/list-routes', 'DevController@listRoutes', 'GET');
+
+    // TODO: LIST CONSTANTS ENDPOINT
+}
+
+$GLOBALS['config']['testmode'] = 0; //This enables testing
 //dispatch router since authentication and global variables are set!
 $router->dispatch($GLOBALS['url_loc'], $dbConnection, $GLOBALS['config']['devmode']);
 // Check if we're in devmode
-if ($GLOBALS['config']['devmode'] == 1) {
-    include($GLOBALS['config']['private_folder'] . '/frontend/devmode.php');
+if($GLOBALS['config']['devmode'] == 1){
+    include($GLOBALS['config']['private_folder'].'/frontend/devmode.php');  
 }
 
+$GLOBALS['config']['testmode'] = 1; //This enables testing
 
 if ($GLOBALS['config']['devmode'] && $GLOBALS['config']['testmode']) {
     // Run testing script
-    include_once($GLOBALS['config']['private_folder'] . '/tests/tests.php');
+    include_once($GLOBALS['config']['private_folder'].'/tests/tests.php');
     $GLOBALS['config']['testmode'] = 0; //This disables testing
 }
 
